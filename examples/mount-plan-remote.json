@@ -1,0 +1,32 @@
+{
+  "$comment": "Fully remote mount plan - all modules fetched from git repositories",
+  "session": {
+    "orchestrator": {
+      "module": "loop-basic",
+      "source": "git+https://github.com/microsoft/amplifier-module-loop-basic@main"
+    },
+    "context": {
+      "module": "context-simple",
+      "source": "git+https://github.com/microsoft/amplifier-module-context-simple@main"
+    }
+  },
+  "providers": [
+    {
+      "module": "provider-anthropic",
+      "source": "git+https://github.com/microsoft/amplifier-module-provider-anthropic@main",
+      "config": {
+        "model": "claude-sonnet-4-5"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "module": "tool-filesystem",
+      "source": "git+https://github.com/microsoft/amplifier-module-tool-filesystem@main",
+      "config": {
+        "allowed_paths": ["."]
+      }
+    }
+  ],
+  "hooks": []
+}

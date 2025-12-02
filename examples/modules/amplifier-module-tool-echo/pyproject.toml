@@ -1,0 +1,13 @@
+[project]
+name = "amplifier-module-tool-echo"
+version = "0.1.0"
+description = "Example echo tool module for Amplifier Workbench"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.entry-points."amplifier.modules"]
+tool-echo = "amplifier_module_tool_echo:mount"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

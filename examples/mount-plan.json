@@ -1,0 +1,23 @@
+{
+  "session": {
+    "orchestrator": "loop-basic",
+    "context": "context-simple"
+  },
+  "providers": [
+    {
+      "module": "provider-anthropic",
+      "config": {
+        "model": "claude-sonnet-4-5"
+      }
+    }
+  ],
+  "tools": [
+    {
+      "module": "tool-filesystem",
+      "config": {
+        "allowed_paths": ["."]
+      }
+    }
+  ],
+  "hooks": []
+}
