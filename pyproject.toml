@@ -17,8 +17,8 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-amplifier-core = { path = "../amplifier-dev/amplifier-core", editable = true }
-amplifier-module-resolution = { path = "../amplifier-dev/amplifier-module-resolution", editable = true }
+amplifier-core = { git = "https://github.com/microsoft/amplifier-core", branch = "main" }
+amplifier-module-resolution = { path = "./modules/amplifier-module-resolution", editable = true }
 
 [project.optional-dependencies]
 dev = [

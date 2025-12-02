@@ -5,7 +5,7 @@ requires-python = ">=3.11"
 [[package]]
 name = "amplifier-core"
 version = "1.0.0"
-source = { editable = "../amplifier-dev/amplifier-core" }
+source = { git = "https://github.com/microsoft/amplifier-core?branch=main#26082ca0d5f09b5130076c18c1b70311428e7b5e" }
 dependencies = [
     { name = "click" },
     { name = "pydantic" },
@@ -14,25 +14,10 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.3.1" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "tomli", specifier = ">=2.0" },
-    { name = "typing-extensions", specifier = ">=4.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "pytest-asyncio", specifier = ">=1.3.0" },
-]
-
 [[package]]
 name = "amplifier-module-resolution"
 version = "0.1.0"
-source = { editable = "../amplifier-dev/amplifier-module-resolution" }
+source = { editable = "modules/amplifier-module-resolution" }
 
 [package.metadata]
 requires-dist = [
@@ -68,8 +53,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "amplifier-core", editable = "../amplifier-dev/amplifier-core" },
-    { name = "amplifier-module-resolution", editable = "../amplifier-dev/amplifier-module-resolution" },
+    { name = "amplifier-core", git = "https://github.com/microsoft/amplifier-core?branch=main" },
+    { name = "amplifier-module-resolution", editable = "modules/amplifier-module-resolution" },
     { name = "anthropic", specifier = ">=0.75.0" },
     { name = "click", specifier = ">=8.0" },
     { name = "fastapi", specifier = ">=0.100.0" },
