@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from amplifier_workbench.core import SessionManager
 
-from .routes import collections_router, configs_router, modules_router, sessions_router
+from .routes import collections_router, configs_router, modules_router, profiles_router, sessions_router
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ def create_app(
     # Include routers
     app.include_router(collections_router, prefix="/api")
     app.include_router(modules_router, prefix="/api")
+    app.include_router(profiles_router, prefix="/api")
     app.include_router(configs_router, prefix="/api")
     app.include_router(sessions_router, prefix="/api")
 
