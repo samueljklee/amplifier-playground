@@ -5,6 +5,29 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 # =============================================================================
+# Collection Models
+# =============================================================================
+
+
+class CollectionResourcesInfo(BaseModel):
+    """Resources available in a collection."""
+
+    profiles: list[str] = Field(default_factory=list)
+    agents: list[str] = Field(default_factory=list)
+    context: list[str] = Field(default_factory=list)
+    scenario_tools: list[str] = Field(default_factory=list)
+    modules: list[str] = Field(default_factory=list)
+
+
+class CollectionInfo(BaseModel):
+    """Collection information."""
+
+    name: str
+    path: str
+    resources: CollectionResourcesInfo | None = None
+
+
+# =============================================================================
 # Module Models
 # =============================================================================
 

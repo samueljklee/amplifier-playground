@@ -1,5 +1,6 @@
 """Core library for Amplifier Workbench."""
 
+from .collection_manager import CollectionInfo, CollectionManager
 from .config_manager import ConfigManager, MountPlanConfig
 from .module_registry import ModuleInfo, ModuleRegistry
 from .protocols import EventCallback
@@ -12,6 +13,9 @@ from .ux_systems import (
 )
 
 __all__ = [
+    # Collections
+    "CollectionManager",
+    "CollectionInfo",
     # Config
     "ConfigManager",
     "MountPlanConfig",

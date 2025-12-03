@@ -1,7 +1,8 @@
 """API routes for Amplifier Workbench."""
 
+from .collections import router as collections_router
 from .configs import router as configs_router
 from .modules import router as modules_router
 from .sessions import router as sessions_router
 
-__all__ = ["configs_router", "modules_router", "sessions_router"]
+__all__ = ["collections_router", "configs_router", "modules_router", "sessions_router"]

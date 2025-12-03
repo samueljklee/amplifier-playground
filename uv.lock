@@ -3,6 +3,22 @@ revision = 3
 requires-python = ">=3.11"
 
 [[package]]
+name = "amplifier-collections"
+version = "0.1.0"
+source = { git = "https://github.com/microsoft/amplifier-collections?branch=main#816828369914f4ccf78cc2634b1a3c593d026e5f" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[[package]]
+name = "amplifier-config"
+version = "0.1.0"
+source = { git = "https://github.com/microsoft/amplifier-config?branch=main#003ec3d6a50de9b0e1c2d05e6d91fa15e77dd753" }
+dependencies = [
+    { name = "pyyaml" },
+]
+
+[[package]]
 name = "amplifier-core"
 version = "1.0.0"
 source = { git = "https://github.com/microsoft/amplifier-core?branch=main#26082ca0d5f09b5130076c18c1b70311428e7b5e" }
@@ -17,27 +33,32 @@ dependencies = [
 [[package]]
 name = "amplifier-module-resolution"
 version = "0.1.0"
-source = { editable = "modules/amplifier-module-resolution" }
+source = { git = "https://github.com/microsoft/amplifier-module-resolution?branch=main#a44af3d573f251fe100955d5d5223d83cb07ee04" }
 
-[package.metadata]
-requires-dist = [
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1" },
+[[package]]
+name = "amplifier-profiles"
+version = "0.1.0"
+source = { git = "https://github.com/microsoft/amplifier-profiles?branch=main#ff4f864a2eabd41a7f970718cd799b382083a2dd" }
+dependencies = [
+    { name = "amplifier-collections" },
+    { name = "pydantic" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "amplifier-workbench"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "amplifier-collections" },
+    { name = "amplifier-config" },
     { name = "amplifier-core" },
     { name = "amplifier-module-resolution" },
+    { name = "amplifier-profiles" },
     { name = "anthropic" },
     { name = "click" },
     { name = "fastapi" },
     { name = "pydantic" },
+    { name = "pyyaml" },
     { name = "rich" },
     { name = "sse-starlette" },
     { name = "uvicorn" },
@@ -53,8 +74,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "amplifier-collections", git = "https://github.com/microsoft/amplifier-collections?branch=main" },
+    { name = "amplifier-config", git = "https://github.com/microsoft/amplifier-config?branch=main" },
     { name = "amplifier-core", git = "https://github.com/microsoft/amplifier-core?branch=main" },
-    { name = "amplifier-module-resolution", editable = "modules/amplifier-module-resolution" },
+    { name = "amplifier-module-resolution", git = "https://github.com/microsoft/amplifier-module-resolution?branch=main" },
+    { name = "amplifier-profiles", git = "https://github.com/microsoft/amplifier-profiles?branch=main" },
     { name = "anthropic", specifier = ">=0.75.0" },
     { name = "click", specifier = ">=8.0" },
     { name = "fastapi", specifier = ">=0.100.0" },
@@ -62,6 +86,7 @@ requires-dist = [
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "rich", specifier = ">=13.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "sse-starlette", specifier = ">=1.6.0" },
