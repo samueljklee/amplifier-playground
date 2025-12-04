@@ -79,4 +79,32 @@ export interface DependencyFile {
 export interface ProfileDependencyGraph {
   profile_name: string;
   files: DependencyFile[];
+  mount_plan: MountPlan | null;
+}
+
+// Mount Plan types
+export interface MountPlan {
+  session?: {
+    orchestrator?: string;
+    context?: string;
+    [key: string]: unknown;
+  };
+  providers?: ModuleEntry[];
+  tools?: ModuleEntry[];
+  hooks?: ModuleEntry[];
+  agents?: Record<string, AgentConfig>;
+  [key: string]: unknown;
+}
+
+export interface ModuleEntry {
+  module: string;
+  config?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface AgentConfig {
+  description?: string;
+  session?: Record<string, unknown>;
+  tools?: string[];
+  [key: string]: unknown;
 }

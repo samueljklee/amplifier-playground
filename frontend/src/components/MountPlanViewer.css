@@ -1,0 +1,210 @@
+/* Mount Plan Viewer */
+
+.mount-plan-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.mount-plan-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+/* Sections */
+.mount-plan-section {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mount-plan-section.empty {
+  opacity: 0.6;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.section-count {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.section-empty {
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Section type colors (subtle) */
+.section-title-provider { color: var(--accent-color, #a855f7); }
+.section-title-tool { color: #3b82f6; }
+.section-title-hook { color: #f59e0b; }
+.section-title-agent { color: #22c55e; }
+
+/* Session section */
+.session-section {
+  background: var(--bg-secondary);
+}
+
+.session-content {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.session-item {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.session-label {
+  color: var(--text-muted);
+  min-width: 100px;
+}
+
+.session-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  color: var(--text-primary);
+}
+
+/* Module cards */
+.module-card {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.module-card:last-child {
+  border-bottom: none;
+}
+
+.module-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.module-card-header:hover {
+  background: var(--bg-hover);
+}
+
+.module-icon {
+  flex-shrink: 0;
+}
+
+.module-icon-provider { color: var(--accent-color, #a855f7); }
+.module-icon-tool { color: #3b82f6; }
+.module-icon-hook { color: #f59e0b; }
+.module-icon-agent { color: #22c55e; }
+
+.module-name {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.agent-description {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.expand-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Config display */
+.module-card-config {
+  padding: 0 0.75rem 0.75rem 2rem;
+}
+
+.no-config {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.config-inline {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  font-size: 0.75rem;
+}
+
+.config-key {
+  color: var(--text-muted);
+}
+
+.config-value {
+  color: var(--accent-color, #a855f7);
+}
+
+.config-block {
+  margin: 0;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  overflow-x: auto;
+  color: var(--text-secondary);
+}
+
+/* Actions footer */
+.mount-plan-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: auto;
+}
+
+.mount-plan-actions .button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Raw view */
+.mount-plan-raw {
+  flex: 1;
+  margin: 0;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  overflow: auto;
+  color: var(--text-secondary);
+}

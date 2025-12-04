@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import type { ProfileDependencyGraph, DependencyFile } from '../types';
 import { getProfileDependencyGraph } from '../api';
+import { MountPlanViewer } from './MountPlanViewer';
 
 interface DependencyGraphViewerProps {
   profileName: string | null;
   onClose: () => void;
 }
+
+type ViewTab = 'dependencies' | 'mount-plan';
 
 function getFileIcon(file: DependencyFile): string {
   if (file.file_type === 'profile') return 'P';
@@ -34,6 +37,7 @@ export function DependencyGraphViewer({ profileName, onClose }: DependencyGraphV
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<DependencyFile | null>(null);
+  const [activeTab, setActiveTab] = useState<ViewTab>('dependencies');
 
   useEffect(() => {
     if (!profileName) {
@@ -79,13 +83,24 @@ export function DependencyGraphViewer({ profileName, onClose }: DependencyGraphV
   return (
     <div className="graph-viewer-overlay" onClick={onClose}>
       <div className="graph-viewer" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
+        {/* Header with tabs */}
         <div className="graph-viewer-header">
-          <div>
-            <h2>Dependency Graph: {profileName}</h2>
-            <p className="graph-summary">
-              {graph ? `${graph.files.length} connected files` : 'Loading...'}
-            </p>
+          <div className="graph-viewer-title">
+            <h2>{profileName}</h2>
+          </div>
+          <div className="graph-viewer-tabs">
+            <button
+              className={`tab-button ${activeTab === 'dependencies' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dependencies')}
+            >
+              Dependencies
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'mount-plan' ? 'active' : ''}`}
+              onClick={() => setActiveTab('mount-plan')}
+            >
+              Mount Plan
+            </button>
           </div>
           <button onClick={onClose} className="button small close-btn">X</button>
         </div>
@@ -93,18 +108,18 @@ export function DependencyGraphViewer({ profileName, onClose }: DependencyGraphV
         {/* Main content area */}
         <div className="graph-viewer-body">
           {loading && (
-            <div className="graph-loading">Loading dependency graph...</div>
+            <div className="graph-loading">Loading...</div>
           )}
 
           {error && (
             <div className="graph-error">{error}</div>
           )}
 
-          {graph && !loading && (
+          {graph && !loading && activeTab === 'dependencies' && (
             <>
               {/* File tree sidebar */}
               <div className="file-tree-sidebar">
-                <div className="file-tree-header">Files</div>
+                <div className="file-tree-header">Files ({graph.files.length})</div>
                 <div className="file-tree">
                   {orderedGroups.map(groupKey => (
                     <div key={groupKey} className="file-group">
@@ -174,6 +189,10 @@ export function DependencyGraphViewer({ profileName, onClose }: DependencyGraphV
                 )}
               </div>
             </>
+          )}
+
+          {graph && !loading && activeTab === 'mount-plan' && (
+            <MountPlanViewer plan={graph.mount_plan} />
           )}
         </div>
       </div>

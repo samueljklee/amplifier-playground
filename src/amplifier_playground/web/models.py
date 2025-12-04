@@ -116,6 +116,7 @@ class ProfileDependencyGraph(BaseModel):
 
     profile_name: str
     files: list[DependencyFile]
+    mount_plan: dict[str, Any] | None = None  # Compiled mount plan for the profile
 
 
 # =============================================================================

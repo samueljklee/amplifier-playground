@@ -689,6 +689,44 @@ body {
   color: var(--text-primary);
 }
 
+.graph-viewer-title {
+  flex-shrink: 0;
+}
+
+.graph-viewer-tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.tab-button {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tab-button:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.tab-button.active {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border-color: var(--border-subtle);
+}
+
+.close-btn {
+  flex-shrink: 0;
+}
+
 .graph-summary {
   margin: 0.25rem 0 0;
   font-size: 0.75rem;

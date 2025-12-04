@@ -480,6 +480,7 @@ async def get_profile_dependency_graph(profile_name: str) -> ProfileDependencyGr
     - Parent profiles (via extends)
     - Context files (via @mentions)
     - Recursively follows all references
+    - The compiled mount plan
     """
     manager = get_collection_manager()
     profile_path = find_profile_path(manager, profile_name)
@@ -490,9 +491,21 @@ async def get_profile_dependency_graph(profile_name: str) -> ProfileDependencyGr
     mention_resolver = MentionResolver(collection_manager=manager)
     files = _build_dependency_graph(manager, mention_resolver, profile_path, profile_name)
 
+    # Also compile the mount plan
+    mount_plan: dict[str, Any] | None = None
+    try:
+        loader = build_profile_loader(manager)
+        agent_loader = build_agent_loader(manager)
+        profile = loader.load_profile(profile_name)
+        mount_plan = compile_profile_to_mount_plan(profile, agent_loader=agent_loader)
+    except Exception:
+        # If compilation fails, just return without mount_plan
+        pass
+
     return ProfileDependencyGraph(
         profile_name=profile_name,
         files=files,
+        mount_plan=mount_plan,
     )
 
 
