@@ -6,7 +6,10 @@
   gap: 1rem;
   padding: 1rem;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
+  width: 100%;
+  min-width: 0;
 }
 
 .mount-plan-empty {
@@ -19,7 +22,8 @@
 .mount-plan-section {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .mount-plan-section.empty {
@@ -91,6 +95,8 @@
 .session-value {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   color: var(--text-primary);
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Module cards */
@@ -129,6 +135,10 @@
   font-size: 0.85rem;
   color: var(--text-primary);
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .agent-description {
@@ -179,6 +189,9 @@
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   overflow-x: auto;
   color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 /* Actions footer */
