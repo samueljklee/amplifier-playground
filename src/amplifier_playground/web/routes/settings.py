@@ -1,5 +1,7 @@
 """Settings routes for managing API keys and configuration."""
 
+import re
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -7,6 +9,9 @@ from amplifier_playground.core import (
     get_credential_status,
     set_credential,
     delete_credential,
+    get_custom_credentials,
+    add_custom_credential,
+    delete_custom_credential,
     ANTHROPIC_API_KEY,
     OPENAI_API_KEY,
     AZURE_OPENAI_API_KEY,
@@ -14,7 +19,7 @@ from amplifier_playground.core import (
     OLLAMA_BASE_URL,
     VLLM_BASE_URL,
 )
-from amplifier_playground.core.credentials import ENV_VAR_MAPPING, CREDENTIAL_DISPLAY_NAMES
+from amplifier_playground.core.credentials import ENV_VAR_MAPPING, CREDENTIAL_DISPLAY_NAMES, _mask_key
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -38,10 +43,19 @@ class CredentialInfo(BaseModel):
     masked_value: str | None
 
 
+class CustomCredentialInfo(BaseModel):
+    """Information about a custom (user-defined) credential."""
+
+    env_var: str
+    masked_value: str
+    is_custom: bool = True
+
+
 class CredentialsListResponse(BaseModel):
     """Response containing all credentials as a list."""
 
     credentials: list[CredentialInfo]
+    custom_credentials: list[CustomCredentialInfo]
 
 
 class SetCredentialRequest(BaseModel):
@@ -50,8 +64,8 @@ class SetCredentialRequest(BaseModel):
     value: str
 
 
-class SetGenericCredentialRequest(BaseModel):
-    """Request to set a credential with custom env var."""
+class SetCustomCredentialRequest(BaseModel):
+    """Request to add or update a custom credential."""
 
     env_var: str
     value: str
@@ -59,9 +73,10 @@ class SetGenericCredentialRequest(BaseModel):
 
 @router.get("/credentials", response_model=CredentialsListResponse)
 async def get_credentials_status_list() -> CredentialsListResponse:
-    """Get the configuration status of all known credentials."""
+    """Get the configuration status of all known and custom credentials."""
     status = get_credential_status()
 
+    # Known credentials
     credentials = []
     for key, env_var in ENV_VAR_MAPPING.items():
         cred_status = status.get(key, {"configured": False, "source": None, "masked_value": None})
@@ -74,7 +89,17 @@ async def get_credentials_status_list() -> CredentialsListResponse:
             masked_value=cred_status.get("masked_value"),
         ))
 
-    return CredentialsListResponse(credentials=credentials)
+    # Custom credentials
+    custom_creds = get_custom_credentials()
+    custom_credentials = [
+        CustomCredentialInfo(
+            env_var=cred["env_var"],
+            masked_value=_mask_key(cred["value"]),
+        )
+        for cred in custom_creds
+    ]
+
+    return CredentialsListResponse(credentials=credentials, custom_credentials=custom_credentials)
 
 
 @router.put("/credentials/{credential_key}")
@@ -160,3 +185,44 @@ async def set_openai_key(request: SetCredentialRequest) -> dict:
 async def delete_openai_key() -> dict:
     """Delete the stored OpenAI API key (legacy route)."""
     return await delete_credential_by_key(OPENAI_API_KEY)
+
+
+# Custom credentials routes
+@router.post("/credentials/custom")
+async def add_custom_credential_route(request: SetCustomCredentialRequest) -> dict:
+    """Add or update a custom credential with user-defined env var name."""
+    env_var = request.env_var.strip()
+    value = request.value.strip()
+
+    if not env_var:
+        raise HTTPException(status_code=400, detail="Environment variable name cannot be empty")
+    if not value:
+        raise HTTPException(status_code=400, detail="Value cannot be empty")
+
+    # Validate env var format (uppercase letters, numbers, underscores)
+    if not re.match(r"^[A-Z][A-Z0-9_]*$", env_var):
+        raise HTTPException(
+            status_code=400,
+            detail="Environment variable name must start with uppercase letter and contain only uppercase letters, numbers, and underscores"
+        )
+
+    # Don't allow overriding known credentials via custom route
+    if env_var in ENV_VAR_MAPPING.values():
+        raise HTTPException(
+            status_code=400,
+            detail=f"'{env_var}' is a known credential. Use the standard credentials endpoint instead."
+        )
+
+    add_custom_credential(env_var, value)
+    return {"status": "saved", "env_var": env_var}
+
+
+@router.delete("/credentials/custom/{env_var}")
+async def delete_custom_credential_route(env_var: str) -> dict:
+    """Delete a custom credential by its environment variable name."""
+    deleted = delete_custom_credential(env_var)
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"No custom credential found for {env_var}")
+
+    return {"status": "deleted", "env_var": env_var}

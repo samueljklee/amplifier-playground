@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import type { CredentialsStatus, CredentialInfo } from '../types';
-import { getCredentialsStatus, setCredential, deleteCredential } from '../api';
+import { Eye, EyeOff, Plus, Trash2, X } from 'lucide-react';
+import type { CredentialsStatus, CredentialInfo, CustomCredentialInfo } from '../types';
+import { getCredentialsStatus, setCredential, deleteCredential, addCustomCredential, deleteCustomCredential } from '../api';
 import './SettingsModal.css';
 
 interface SettingsModalProps {
@@ -183,6 +183,153 @@ function CredentialCard({ credential, saving, onSave, onDelete }: CredentialCard
   );
 }
 
+interface CustomCredentialCardProps {
+  credential: CustomCredentialInfo;
+  saving: boolean;
+  onDelete: (envVar: string) => Promise<void>;
+}
+
+function CustomCredentialCard({ credential, saving, onDelete }: CustomCredentialCardProps) {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${credential.env_var}?`)) {
+      return;
+    }
+    setError(null);
+    try {
+      await onDelete(credential.env_var);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete');
+    }
+  };
+
+  return (
+    <div className="credential-card custom">
+      <div className="credential-header">
+        <span className="credential-name">
+          <code>{credential.env_var}</code>
+        </span>
+        <span className="credential-status configured">Custom</span>
+      </div>
+
+      {error && (
+        <div className="credential-message error">
+          {error}
+          <button onClick={() => setError(null)} className="dismiss">Dismiss</button>
+        </div>
+      )}
+
+      <div className="credential-current">
+        <span className="current-label">Value:</span>
+        <code className="current-value">{credential.masked_value}</code>
+        <button
+          onClick={handleDelete}
+          disabled={saving}
+          className="button small danger"
+          title="Delete"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface AddCustomCredentialFormProps {
+  saving: boolean;
+  onAdd: (envVar: string, value: string) => Promise<void>;
+}
+
+function AddCustomCredentialForm({ saving, onAdd }: AddCustomCredentialFormProps) {
+  const [envVar, setEnvVar] = useState('');
+  const [value, setValue] = useState('');
+  const [showValue, setShowValue] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleAdd = async () => {
+    if (!envVar.trim() || !value.trim()) {
+      setError('Both fields are required');
+      return;
+    }
+
+    // Validate env var format
+    if (!/^[A-Z][A-Z0-9_]*$/.test(envVar.trim())) {
+      setError('Environment variable must start with uppercase letter and contain only uppercase letters, numbers, and underscores');
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    try {
+      await onAdd(envVar.trim(), value.trim());
+      setEnvVar('');
+      setValue('');
+      setSuccess('Added successfully');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to add');
+    }
+  };
+
+  return (
+    <div className="add-custom-form">
+      {error && (
+        <div className="credential-message error">
+          {error}
+          <button onClick={() => setError(null)} className="dismiss">Dismiss</button>
+        </div>
+      )}
+      {success && (
+        <div className="credential-message success">
+          {success}
+          <button onClick={() => setSuccess(null)} className="dismiss">Dismiss</button>
+        </div>
+      )}
+
+      <div className="custom-form-row">
+        <input
+          type="text"
+          value={envVar}
+          onChange={(e) => setEnvVar(e.target.value.toUpperCase())}
+          placeholder="ENV_VAR_NAME"
+          className="key-input env-var-input"
+          disabled={saving}
+        />
+        <div className="input-with-toggle">
+          <input
+            type={showValue ? 'text' : 'password'}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Value"
+            className="key-input"
+            disabled={saving}
+          />
+          <button
+            type="button"
+            onClick={() => setShowValue(!showValue)}
+            className="toggle-visibility"
+            title={showValue ? 'Hide' : 'Show'}
+          >
+            {showValue ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={saving || !envVar.trim() || !value.trim()}
+          className="button primary"
+          title="Add"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+      <p className="custom-form-help">
+        Add custom environment variables for modules that need additional configuration.
+      </p>
+    </div>
+  );
+}
+
 export function SettingsModal({ onClose, onSaved }: SettingsModalProps) {
   const [status, setStatus] = useState<CredentialsStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -229,13 +376,37 @@ export function SettingsModal({ onClose, onSaved }: SettingsModalProps) {
     }
   };
 
+  const handleAddCustomCredential = async (envVar: string, value: string) => {
+    setSaving(true);
+    try {
+      await addCustomCredential(envVar, value);
+      await loadStatus();
+      onSaved?.();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCustomCredential = async (envVar: string) => {
+    setSaving(true);
+    try {
+      await deleteCustomCredential(envVar);
+      await loadStatus();
+      onSaved?.();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="settings-modal-header">
           <h2>Settings</h2>
-          <button onClick={onClose} className="button small close-btn">X</button>
+          <button onClick={onClose} className="close-btn" aria-label="Close settings">
+            <X size={18} />
+          </button>
         </div>
 
         {/* Content */}
@@ -270,6 +441,35 @@ export function SettingsModal({ onClose, onSaved }: SettingsModalProps) {
                     onDelete={handleDeleteCredential}
                   />
                 ))}
+              </section>
+
+              {/* Custom Configuration Section */}
+              <section className="settings-section">
+                <h3>Custom Configuration</h3>
+                <p className="section-description">
+                  Add custom environment variables for modules that require additional configuration
+                  not covered by the standard providers above.
+                </p>
+
+                {/* Existing custom credentials */}
+                {status?.custom_credentials && status.custom_credentials.length > 0 && (
+                  <div className="custom-credentials-list">
+                    {status.custom_credentials.map((cred) => (
+                      <CustomCredentialCard
+                        key={cred.env_var}
+                        credential={cred}
+                        saving={saving}
+                        onDelete={handleDeleteCustomCredential}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Add new custom credential form */}
+                <AddCustomCredentialForm
+                  saving={saving}
+                  onAdd={handleAddCustomCredential}
+                />
               </section>
             </>
           )}

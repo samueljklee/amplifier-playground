@@ -234,6 +234,100 @@ CREDENTIAL_DISPLAY_NAMES = {
     VLLM_BASE_URL: "vLLM Base URL",
 }
 
+# Custom credentials key in the credentials file
+CUSTOM_CREDENTIALS_KEY = "_custom_credentials"
+
+
+def get_custom_credentials() -> list[dict[str, str]]:
+    """
+    Get all custom (user-defined) credentials.
+
+    Returns:
+        List of custom credentials: [{"env_var": "MY_VAR", "value": "..."}]
+    """
+    credentials = _load_credentials()
+    return credentials.get(CUSTOM_CREDENTIALS_KEY, [])
+
+
+def add_custom_credential(env_var: str, value: str) -> None:
+    """
+    Add or update a custom credential.
+
+    Args:
+        env_var: Environment variable name
+        value: The value to store
+    """
+    credentials = _load_credentials()
+    custom_list = credentials.get(CUSTOM_CREDENTIALS_KEY, [])
+
+    # Update if exists, otherwise add
+    found = False
+    for cred in custom_list:
+        if cred["env_var"] == env_var:
+            cred["value"] = value
+            found = True
+            break
+
+    if not found:
+        custom_list.append({"env_var": env_var, "value": value})
+
+    credentials[CUSTOM_CREDENTIALS_KEY] = custom_list
+    _save_credentials(credentials)
+
+    # Set in environment immediately
+    os.environ[env_var] = value
+
+
+def delete_custom_credential(env_var: str) -> bool:
+    """
+    Delete a custom credential.
+
+    Args:
+        env_var: Environment variable name to delete
+
+    Returns:
+        True if deleted, False if not found
+    """
+    credentials = _load_credentials()
+    custom_list = credentials.get(CUSTOM_CREDENTIALS_KEY, [])
+
+    original_len = len(custom_list)
+    custom_list = [c for c in custom_list if c["env_var"] != env_var]
+
+    if len(custom_list) == original_len:
+        return False
+
+    credentials[CUSTOM_CREDENTIALS_KEY] = custom_list
+    _save_credentials(credentials)
+
+    # Remove from environment
+    if env_var in os.environ:
+        del os.environ[env_var]
+
+    return True
+
+
+def load_custom_credentials_to_env() -> dict[str, str]:
+    """
+    Load custom credentials into environment variables.
+
+    Returns:
+        Dict of env vars that were set
+    """
+    set_vars = {}
+    custom_list = get_custom_credentials()
+
+    for cred in custom_list:
+        env_var = cred["env_var"]
+        value = cred["value"]
+
+        # Only set if not already in environment
+        if not os.environ.get(env_var):
+            os.environ[env_var] = value
+            set_vars[env_var] = _mask_key(value)
+
+    return set_vars
+
 
 def get_required_credentials_for_providers(provider_modules: list[str]) -> list[dict[str, Any]]:
     """

@@ -59,8 +59,15 @@ export interface CredentialInfo {
   masked_value: string | null;
 }
 
+export interface CustomCredentialInfo {
+  env_var: string;
+  masked_value: string;
+  is_custom: boolean;
+}
+
 export interface CredentialsStatus {
   credentials: CredentialInfo[];
+  custom_credentials: CustomCredentialInfo[];
 }
 
 export interface Message {

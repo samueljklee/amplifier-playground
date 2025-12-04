@@ -178,3 +178,26 @@ export async function deleteCredential(credentialKey: string): Promise<void> {
     throw new Error(error.detail || `Failed to delete credential: ${response.statusText}`);
   }
 }
+
+// Custom credentials
+export async function addCustomCredential(envVar: string, value: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/settings/credentials/custom`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ env_var: envVar, value }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to add custom credential: ${response.statusText}`);
+  }
+}
+
+export async function deleteCustomCredential(envVar: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/settings/credentials/custom/${encodeURIComponent(envVar)}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to delete custom credential: ${response.statusText}`);
+  }
+}
