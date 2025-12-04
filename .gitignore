@@ -54,4 +54,5 @@ Thumbs.db
 # Frontend build artifacts
 frontend/dist/
 frontend/node_modules/
-src/amplifier_playground/web/static/
+# Note: src/amplifier_playground/web/static/ is NOT ignored - it's committed
+# so that `uvx --from git+...` works without requiring Node.js
