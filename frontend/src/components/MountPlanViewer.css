@@ -207,4 +207,16 @@
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   overflow: auto;
   color: var(--text-secondary);
+  white-space: pre;
+}
+
+.mount-plan-raw.wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mount-plan-actions .button.active {
+  background: var(--accent-color, #a855f7);
+  color: white;
+  border-color: var(--accent-color, #a855f7);
 }

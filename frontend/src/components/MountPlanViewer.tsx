@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Zap, Wrench, Anchor, Bot, Copy, Check, ChevronRight, ChevronDown } from 'lucide-react';
+import { Zap, Wrench, Anchor, Bot, Copy, Check, ChevronRight, ChevronDown, WrapText } from 'lucide-react';
 import type { MountPlan, ModuleEntry, AgentConfig } from '../types';
 import './MountPlanViewer.css';
 
@@ -156,6 +156,7 @@ function Section({
 export function MountPlanViewer({ plan }: MountPlanViewerProps) {
   const [copied, setCopied] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
+  const [wordWrap, setWordWrap] = useState(false);
 
   if (!plan) {
     return (
@@ -186,12 +187,16 @@ export function MountPlanViewer({ plan }: MountPlanViewerProps) {
           <button onClick={() => setShowRaw(false)} className="button small">
             Structured View
           </button>
+          <button onClick={() => setWordWrap(!wordWrap)} className={`button small ${wordWrap ? 'active' : ''}`}>
+            <WrapText size={14} />
+            Wrap
+          </button>
           <button onClick={handleCopy} className="button small">
             {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? 'Copied!' : 'Copy JSON'}
           </button>
         </div>
-        <pre className="mount-plan-raw">
+        <pre className={`mount-plan-raw ${wordWrap ? 'wrap' : ''}`}>
           {JSON.stringify(plan, null, 2)}
         </pre>
       </div>
