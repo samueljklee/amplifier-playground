@@ -4,6 +4,7 @@ import { listProfiles } from './api';
 import { SessionPane } from './components/SessionPane';
 import { DependencyGraphViewer } from './components/DependencyGraphViewer';
 import { HelpModal } from './components/HelpModal';
+import { ThemeToggle } from './components/ThemeToggle';
 import './App.css';
 
 interface Pane {
@@ -49,6 +50,7 @@ function App() {
             <button onClick={addPane} className="button primary">
               + Add Pane
             </button>
+            <ThemeToggle />
             <button onClick={() => setShowHelp(true)} className="button secondary">
               Help
             </button>

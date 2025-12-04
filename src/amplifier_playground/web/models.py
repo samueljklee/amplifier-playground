@@ -186,6 +186,19 @@ class SessionInfo(BaseModel):
     config_id: str | None = None
 
 
+class SessionDetailInfo(BaseModel):
+    """Detailed session information."""
+
+    session_id: str
+    is_running: bool
+    profile: str | None = None
+    config_id: str | None = None
+    parent_session_id: str | None = None
+    mount_plan: dict[str, Any] | None = None
+    approval_mode: str | None = None
+    created_at: str | None = None
+
+
 class PromptRequest(BaseModel):
     """Request to send a prompt."""
 

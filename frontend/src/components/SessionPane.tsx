@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Info } from 'lucide-react';
 import type { ProfileListItem, SessionInfo, Message } from '../types';
 import { createSession, sendPrompt, stopSession, subscribeToEvents } from '../api';
+import { SessionInfoModal } from './SessionInfoModal';
 
 interface SessionPaneProps {
   profiles: ProfileListItem[];
@@ -17,6 +19,7 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
   const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<Array<{ event: string; data: unknown }>>([]);
   const [showEvents, setShowEvents] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventsEndRef = useRef<HTMLDivElement>(null);
@@ -48,31 +51,6 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
     eventsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [events]);
 
-  const handleStartSession = useCallback(async () => {
-    if (!selectedProfile) return;
-
-    setLoading(true);
-    setError(null);
-    setMessages([]);
-    setEvents([]);
-
-    try {
-      const newSession = await createSession(selectedProfile);
-      setSession(newSession);
-      setMessages([
-        {
-          role: 'system',
-          content: `Session started with profile: ${selectedProfile}`,
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to start session');
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedProfile]);
-
   const handleStopSession = useCallback(async () => {
     if (!session) return;
 
@@ -92,18 +70,42 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
   }, [session]);
 
   const handleSend = useCallback(async () => {
-    if (!session || !input.trim()) return;
+    if (!input.trim()) return;
+    if (!selectedProfile) {
+      setError('Please select a profile first');
+      return;
+    }
 
     const userMessage = input.trim();
     setInput('');
-    setMessages((prev) => [
-      ...prev,
-      { role: 'user', content: userMessage, timestamp: new Date() },
-    ]);
     setLoading(true);
+    setError(null);
 
     try {
-      const response = await sendPrompt(session.session_id, userMessage);
+      // Auto-start session if not already started
+      let currentSession = session;
+      if (!currentSession) {
+        setMessages([]);
+        setEvents([]);
+        currentSession = await createSession(selectedProfile);
+        setSession(currentSession);
+        setMessages([
+          {
+            role: 'system',
+            content: `Session started with profile: ${selectedProfile}`,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+
+      // Add user message to display
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: userMessage, timestamp: new Date() },
+      ]);
+
+      // Send the message
+      const response = await sendPrompt(currentSession.session_id, userMessage);
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: response.response, timestamp: new Date() },
@@ -113,7 +115,7 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
     } finally {
       setLoading(false);
     }
-  }, [session, input]);
+  }, [session, input, selectedProfile]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -149,15 +151,7 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
           >
             View
           </button>
-          {!session ? (
-            <button
-              onClick={handleStartSession}
-              disabled={!selectedProfile || loading}
-              className="button primary small"
-            >
-              {loading ? 'Starting...' : 'Start'}
-            </button>
-          ) : (
+          {session && (
             <>
               <span className="status-badge running">Running</span>
               <button
@@ -166,6 +160,13 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
                 className="button danger small"
               >
                 Stop
+              </button>
+              <button
+                onClick={() => setShowInfo(true)}
+                className="button small icon-btn"
+                title="Session info"
+              >
+                <Info size={14} />
               </button>
             </>
           )}
@@ -199,7 +200,7 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
           <div className="messages">
             {messages.length === 0 ? (
               <div className="empty-state center">
-                <p>Select a profile and start a session</p>
+                <p>{selectedProfile ? 'Send a message to start' : 'Select a profile to begin'}</p>
               </div>
             ) : (
               messages.map((msg, i) => (
@@ -227,17 +228,17 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder={session ? 'Type a message...' : 'Start a session first'}
-              disabled={!session || loading}
+              placeholder={selectedProfile ? 'Type a message to start...' : 'Select a profile first'}
+              disabled={!selectedProfile || loading}
               rows={2}
               className="message-input"
             />
             <button
               onClick={handleSend}
-              disabled={!session || !input.trim() || loading}
+              disabled={!selectedProfile || !input.trim() || loading}
               className="button primary send-button"
             >
-              Send
+              {loading && !session ? 'Starting...' : 'Send'}
             </button>
           </div>
         </div>
@@ -263,6 +264,14 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
           </div>
         )}
       </div>
+
+      {/* Session Info Modal */}
+      {showInfo && session && (
+        <SessionInfoModal
+          sessionId={session.session_id}
+          onClose={() => setShowInfo(false)}
+        />
+      )}
     </div>
   );
 }

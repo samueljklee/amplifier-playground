@@ -24,6 +24,7 @@ from ..models import (
     PromptRequest,
     PromptResponse,
     SessionInfo,
+    SessionDetailInfo,
 )
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -177,6 +178,7 @@ async def create_session(request: CreateSessionRequest) -> SessionInfo:
         mount_plan=mount_plan,
         approval_mode=request.approval_mode,  # type: ignore
         modules_dirs=request.modules_dirs,
+        profile_name=profile_name,
     )
     session_id = runner.session_id
 
@@ -231,6 +233,24 @@ async def get_session(session_id: str) -> SessionInfo:
     return SessionInfo(
         session_id=session_id,
         is_running=runner.is_running,
+    )
+
+
+@router.get("/{session_id}/details", response_model=SessionDetailInfo)
+async def get_session_details(session_id: str) -> SessionDetailInfo:
+    """Get detailed session information including mount plan."""
+    manager = get_session_manager()
+    runner = await manager.get(session_id)
+
+    if not runner:
+        raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
+
+    return SessionDetailInfo(
+        session_id=session_id,
+        is_running=runner.is_running,
+        profile=runner.profile_name,
+        mount_plan=runner.mount_plan,
+        approval_mode=runner.approval_mode,
     )
 
 

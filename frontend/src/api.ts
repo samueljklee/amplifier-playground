@@ -1,6 +1,6 @@
 // API client for Amplifier Playground
 
-import type { ProfileListItem, ProfileContent, ProfileDependencyGraph, SessionInfo, PromptResponse } from './types';
+import type { ProfileListItem, ProfileContent, ProfileDependencyGraph, SessionInfo, SessionDetailInfo, PromptResponse } from './types';
 
 const API_BASE = '/api';
 
@@ -76,6 +76,15 @@ export async function stopSession(sessionId: string): Promise<void> {
   if (!response.ok) {
     throw new Error(`Failed to stop session: ${response.statusText}`);
   }
+}
+
+export async function getSessionDetails(sessionId: string): Promise<SessionDetailInfo> {
+  const response = await fetch(`${API_BASE}/sessions/${sessionId}/details`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to get session details: ${response.statusText}`);
+  }
+  return response.json();
 }
 
 export function subscribeToEvents(

@@ -23,6 +23,17 @@ export interface SessionInfo {
   config_id: string | null;
 }
 
+export interface SessionDetailInfo {
+  session_id: string;
+  is_running: boolean;
+  profile: string | null;
+  config_id: string | null;
+  parent_session_id: string | null;
+  mount_plan: Record<string, unknown> | null;
+  approval_mode: string | null;
+  created_at: string | null;
+}
+
 export interface PromptResponse {
   response: string;
   session_id: string;
