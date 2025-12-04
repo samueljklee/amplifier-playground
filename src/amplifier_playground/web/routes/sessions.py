@@ -37,6 +37,29 @@ _collection_manager: CollectionManager | None = None
 # Event queues per session for SSE
 _event_queues: dict[str, asyncio.Queue] = {}
 
+# Shutdown flag for graceful SSE termination
+_shutdown_event: asyncio.Event | None = None
+
+
+def get_shutdown_event() -> asyncio.Event:
+    """Get or create the shutdown event."""
+    global _shutdown_event
+    if _shutdown_event is None:
+        _shutdown_event = asyncio.Event()
+    return _shutdown_event
+
+
+async def signal_shutdown():
+    """Signal all SSE connections to terminate."""
+    event = get_shutdown_event()
+    event.set()
+    # Send termination signal to all queues
+    for queue in _event_queues.values():
+        try:
+            queue.put_nowait(None)  # None signals termination
+        except asyncio.QueueFull:
+            pass
+
 
 def get_session_manager() -> SessionManager:
     """Get or create the session manager."""
@@ -306,6 +329,8 @@ async def stream_events(session_id: str):
     if session_id not in _event_queues:
         raise HTTPException(status_code=404, detail=f"Session not found or no events: {session_id}")
 
+    shutdown_event = get_shutdown_event()
+
     async def event_generator():
         """Generate SSE events from the queue."""
         queue = _event_queues.get(session_id)
@@ -313,17 +338,22 @@ async def stream_events(session_id: str):
             return
 
         try:
-            while True:
+            while not shutdown_event.is_set():
                 try:
-                    # Wait for event with timeout to allow checking if session still exists
-                    event = await asyncio.wait_for(queue.get(), timeout=30.0)
+                    # Wait for event with timeout to allow checking shutdown
+                    event = await asyncio.wait_for(queue.get(), timeout=5.0)
+                    # None signals termination
+                    if event is None:
+                        break
                     yield f"data: {json.dumps(event)}\n\n"
                 except asyncio.TimeoutError:
-                    # Send keepalive
+                    # Send keepalive (and check shutdown on next loop)
                     yield ": keepalive\n\n"
+                except asyncio.CancelledError:
+                    break
                 except Exception:
                     break
-        finally:
+        except asyncio.CancelledError:
             pass
 
     return StreamingResponse(

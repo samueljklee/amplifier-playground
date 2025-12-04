@@ -143,6 +143,40 @@ body {
   font-size: 0.875rem;
 }
 
+/* Setup Banner */
+.setup-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--warning-subtle, rgba(245, 158, 11, 0.15));
+  border-bottom: 1px solid var(--warning-color, #f59e0b);
+  font-size: 0.875rem;
+}
+
+.setup-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--warning-color, #f59e0b);
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.setup-banner-text {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.setup-banner-text strong {
+  color: var(--warning-color, #f59e0b);
+}
+
 /* Panes Container */
 .panes-container {
   display: flex;

@@ -9,9 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from amplifier_playground.core import SessionManager
+from amplifier_playground.core import SessionManager, load_credentials_to_env
 
 from .routes import collections_router, configs_router, modules_router, profiles_router, sessions_router
+from .routes.settings import router as settings_router
 
 # Path to bundled frontend static files
 STATIC_DIR = Path(__file__).parent / "static"
@@ -26,10 +27,19 @@ _session_manager: SessionManager | None = None
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
     logger.info("Starting Amplifier Playground API")
+
+    # Load stored credentials into environment
+    loaded = load_credentials_to_env()
+    if loaded:
+        logger.info(f"Loaded credentials from config: {', '.join(loaded.keys())}")
+
     yield
     # Cleanup on shutdown
     logger.info("Shutting down Amplifier Playground API")
-    from .routes.sessions import get_session_manager
+    from .routes.sessions import get_session_manager, signal_shutdown
+
+    # Signal SSE connections to terminate first
+    await signal_shutdown()
 
     manager = get_session_manager()
     await manager.stop_all()
@@ -75,6 +85,7 @@ def create_app(
     app.include_router(profiles_router, prefix="/api")
     app.include_router(configs_router, prefix="/api")
     app.include_router(sessions_router, prefix="/api")
+    app.include_router(settings_router, prefix="/api")
 
     @app.get("/health")
     async def health_check():

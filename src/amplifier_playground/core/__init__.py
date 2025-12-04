@@ -2,6 +2,15 @@
 
 from .collection_manager import CollectionInfo, CollectionManager
 from .config_manager import ConfigManager, MountPlanConfig
+from .credentials import (
+    get_credential,
+    get_credential_status,
+    load_credentials_to_env,
+    set_credential,
+    delete_credential,
+    ANTHROPIC_API_KEY,
+    OPENAI_API_KEY,
+)
 from .module_registry import ModuleInfo, ModuleRegistry
 from .protocols import EventCallback
 from .session_runner import SessionManager, SessionRunner
@@ -19,6 +28,14 @@ __all__ = [
     # Config
     "ConfigManager",
     "MountPlanConfig",
+    # Credentials
+    "get_credential",
+    "get_credential_status",
+    "load_credentials_to_env",
+    "set_credential",
+    "delete_credential",
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
     # Modules
     "ModuleRegistry",
     "ModuleInfo",

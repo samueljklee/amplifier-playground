@@ -1,6 +1,6 @@
 // API client for Amplifier Playground
 
-import type { ProfileListItem, ProfileContent, ProfileDependencyGraph, SessionInfo, SessionDetailInfo, PromptResponse } from './types';
+import type { ProfileListItem, ProfileContent, ProfileDependencyGraph, SessionInfo, SessionDetailInfo, PromptResponse, CredentialsStatus } from './types';
 
 const API_BASE = '/api';
 
@@ -109,4 +109,36 @@ export function subscribeToEvents(
   };
 
   return () => eventSource.close();
+}
+
+// Settings API
+
+export async function getCredentialsStatus(): Promise<CredentialsStatus> {
+  const response = await fetch(`${API_BASE}/settings/credentials`);
+  if (!response.ok) {
+    throw new Error(`Failed to get credentials status: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function setAnthropicKey(apiKey: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/settings/credentials/anthropic`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: apiKey }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to save API key: ${response.statusText}`);
+  }
+}
+
+export async function deleteAnthropicKey(): Promise<void> {
+  const response = await fetch(`${API_BASE}/settings/credentials/anthropic`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to delete API key: ${response.statusText}`);
+  }
 }

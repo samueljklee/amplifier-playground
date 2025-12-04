@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { ProfileListItem } from './types';
-import { listProfiles } from './api';
+import { Settings } from 'lucide-react';
+import type { ProfileListItem, CredentialsStatus } from './types';
+import { listProfiles, getCredentialsStatus } from './api';
 import { SessionPane } from './components/SessionPane';
 import { DependencyGraphViewer } from './components/DependencyGraphViewer';
 import { HelpModal } from './components/HelpModal';
+import { SettingsModal } from './components/SettingsModal';
 import { ThemeToggle } from './components/ThemeToggle';
 import './App.css';
 
@@ -17,12 +19,22 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [viewingProfile, setViewingProfile] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [credentials, setCredentials] = useState<CredentialsStatus | null>(null);
 
-  // Load profiles on mount
+  // Load profiles and credentials status on mount
   useEffect(() => {
     listProfiles()
       .then(setProfiles)
       .catch((e) => setError(e.message));
+
+    loadCredentials();
+  }, []);
+
+  const loadCredentials = useCallback(() => {
+    getCredentialsStatus()
+      .then(setCredentials)
+      .catch(console.error);
   }, []);
 
   const addPane = useCallback(() => {
@@ -51,6 +63,13 @@ function App() {
               + Add Pane
             </button>
             <ThemeToggle />
+            <button
+              onClick={() => setShowSettings(true)}
+              className="button icon-btn secondary"
+              title="Settings"
+            >
+              <Settings size={16} />
+            </button>
             <button onClick={() => setShowHelp(true)} className="button secondary">
               Help
             </button>
@@ -61,6 +80,19 @@ function App() {
       {error && (
         <div className="global-error">
           Failed to load profiles: {error}
+        </div>
+      )}
+
+      {/* Setup Banner - show if no API key configured */}
+      {credentials && !credentials.anthropic_api_key.configured && (
+        <div className="setup-banner">
+          <span className="setup-banner-icon">!</span>
+          <span className="setup-banner-text">
+            <strong>API key required:</strong> Configure your Anthropic API key to start sessions.
+          </span>
+          <button onClick={() => setShowSettings(true)} className="button primary small">
+            Configure
+          </button>
         </div>
       )}
 
@@ -86,6 +118,14 @@ function App() {
       {/* Help Modal */}
       {showHelp && (
         <HelpModal onClose={() => setShowHelp(false)} />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onSaved={loadCredentials}
+        />
       )}
     </div>
   );

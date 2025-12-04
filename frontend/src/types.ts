@@ -44,6 +44,17 @@ export interface SessionEvent {
   data: Record<string, unknown>;
 }
 
+export interface CredentialStatus {
+  configured: boolean;
+  source: 'env' | 'file' | null;
+  masked_value: string | null;
+}
+
+export interface CredentialsStatus {
+  anthropic_api_key: CredentialStatus;
+  openai_api_key: CredentialStatus;
+}
+
 export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
