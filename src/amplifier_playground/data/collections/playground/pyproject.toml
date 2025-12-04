@@ -1,0 +1,7 @@
+[project]
+name = "playground"
+version = "0.1.0"
+description = "Example profiles demonstrating Amplifier Playground features"
+
+[tool.amplifier.collection]
+name = "playground"

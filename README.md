@@ -36,12 +36,13 @@ This is useful for:
 
 ## Bundled Collections
 
-The playground includes two bundled collections for getting started quickly:
+The playground includes bundled collections for getting started quickly:
 
+- **playground** - Example profiles demonstrating profile syntax and features
 - **foundation** - Base profiles and context files for general use
 - **developer-expertise** - Developer-focused profiles with specialized agents
 
-These collections are pulled from [amplifier-app-cli](https://github.com/microsoft/amplifier-app-cli) and bundled here for convenience. They will remain bundled until those collections are refactored into separate packages.
+The `foundation` and `developer-expertise` collections are pulled from [amplifier-app-cli](https://github.com/microsoft/amplifier-app-cli) and bundled here for convenience. They will remain bundled until those collections are refactored into separate packages.
 
 ### CLI Options
 
