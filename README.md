@@ -5,11 +5,13 @@ Interactive environment for building, configuring, and testing Amplifier AI agen
 ## Quickstart
 
 ```bash
-# Install
+# Run directly with uvx (no installation needed)
+uvx amplifier-playground
+
+# Or install from source
+git clone https://github.com/samueljklee/amplifier-playground
 cd amplifier-playground
 uv sync
-
-# Launch (opens web UI in browser)
 amplay
 ```
 
@@ -31,7 +33,7 @@ amplay collections list        # Browse collections
 
 ## Installation
 
-### From PyPI (coming soon)
+### With uvx (recommended)
 
 ```bash
 uvx amplifier-playground
@@ -40,7 +42,7 @@ uvx amplifier-playground
 ### From Source
 
 ```bash
-git clone https://github.com/anthropics/amplifier-playground
+git clone https://github.com/samueljklee/amplifier-playground
 cd amplifier-playground
 uv sync
 ```
