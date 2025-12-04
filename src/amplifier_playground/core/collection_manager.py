@@ -60,10 +60,23 @@ class CollectionManager:
         """Build search paths list in precedence order (lowest to highest).
 
         CollectionResolver searches in reverse order, so we put lowest precedence first.
+
+        Search path precedence (highest to lowest):
+        1. Extra paths provided by caller
+        2. Project-local: ./.amplifier/collections/
+        3. User-specific playground: ~/.amplifier-playground/collections/
+        4. User-global amplifier: ~/.amplifier/collections/
+        5. Bundled collections (package data) - lowest precedence
         """
         paths: list[Path] = []
 
-        # Lowest: User-global amplifier collections
+        # Lowest: Bundled collections (package data)
+        package_dir = Path(__file__).parent.parent  # amplifier_playground/
+        bundled = package_dir / "data" / "collections"
+        if bundled.exists():
+            paths.append(bundled)
+
+        # Low: User-global amplifier collections
         user_global = Path.home() / ".amplifier" / "collections"
         if user_global.exists():
             paths.append(user_global)

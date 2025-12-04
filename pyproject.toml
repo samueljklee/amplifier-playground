@@ -50,6 +50,7 @@ packages = ["src/amplifier_playground"]
 [tool.hatch.build.targets.wheel.force-include]
 # Include frontend build in the package
 "src/amplifier_playground/web/static" = "amplifier_playground/web/static"
+# Note: data/collections is included automatically since it's inside src/amplifier_playground/
 
 [tool.ruff]
 line-length = 120

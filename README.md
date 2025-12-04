@@ -34,6 +34,15 @@ This is useful for:
 - Quick experiments without modifying your profile files
 - Debugging and inspecting exact session configurations
 
+## Bundled Collections
+
+The playground includes two bundled collections for getting started quickly:
+
+- **foundation** - Base profiles and context files for general use
+- **developer-expertise** - Developer-focused profiles with specialized agents
+
+These collections are pulled from [amplifier-app-cli](https://github.com/microsoft/amplifier-app-cli) and bundled here for convenience. They will remain bundled until those collections are refactored into separate packages.
+
 ### CLI Options
 
 ```bash
