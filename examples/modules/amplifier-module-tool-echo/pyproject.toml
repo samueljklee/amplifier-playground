@@ -1,7 +1,7 @@
 [project]
 name = "amplifier-module-tool-echo"
 version = "0.1.0"
-description = "Example echo tool module for Amplifier Workbench"
+description = "Example echo tool module for Amplifier Playground"
 requires-python = ">=3.11"
 dependencies = []
 

@@ -1,7 +1,7 @@
 """Echo Tool Module for Amplifier.
 
 A simple example tool that echoes back messages and performs basic operations.
-Used to demonstrate local module development and testing with Amplifier Workbench.
+Used to demonstrate local module development and testing with Amplifier Playground.
 """
 
 import logging

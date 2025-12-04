@@ -36,16 +36,7 @@ version = "0.1.0"
 source = { git = "https://github.com/microsoft/amplifier-module-resolution?branch=main#a44af3d573f251fe100955d5d5223d83cb07ee04" }
 
 [[package]]
-name = "amplifier-profiles"
-version = "0.1.0"
-source = { git = "https://github.com/microsoft/amplifier-profiles?branch=main#ff4f864a2eabd41a7f970718cd799b382083a2dd" }
-dependencies = [
-    { name = "amplifier-collections" },
-    { name = "pydantic" },
-]
-
-[[package]]
-name = "amplifier-workbench"
+name = "amplifier-playground"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -93,6 +84,15 @@ requires-dist = [
     { name = "uvicorn", specifier = ">=0.20.0" },
 ]
 provides-extras = ["dev"]
+
+[[package]]
+name = "amplifier-profiles"
+version = "0.1.0"
+source = { git = "https://github.com/microsoft/amplifier-profiles?branch=main#ff4f864a2eabd41a7f970718cd799b382083a2dd" }
+dependencies = [
+    { name = "amplifier-collections" },
+    { name = "pydantic" },
+]
 
 [[package]]
 name = "annotated-doc"

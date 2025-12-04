@@ -1,5 +1,5 @@
 [project]
-name = "amplifier-workbench"
+name = "amplifier-playground"
 version = "0.1.0"
 description = "Interactive configuration and testing tool for Amplifier runtime"
 readme = "README.md"
@@ -38,14 +38,18 @@ dev = [
 ]
 
 [project.scripts]
-awb = "amplifier_workbench.cli.main:cli"
+amplay = "amplifier_playground.cli.main:cli"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/amplifier_workbench"]
+packages = ["src/amplifier_playground"]
+
+[tool.hatch.build.targets.wheel.force-include]
+# Include frontend build in the package
+"src/amplifier_playground/web/static" = "amplifier_playground/web/static"
 
 [tool.ruff]
 line-length = 120

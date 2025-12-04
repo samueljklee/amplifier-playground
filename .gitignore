@@ -50,3 +50,8 @@ Thumbs.db
 .env
 .env.local
 *.local.json
+
+# Frontend build artifacts
+frontend/dist/
+frontend/node_modules/
+src/amplifier_playground/web/static/

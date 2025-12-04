@@ -1,4 +1,4 @@
-// API Types for Amplifier Workbench
+// API Types for Amplifier Playground
 
 export interface ProfileListItem {
   name: string;

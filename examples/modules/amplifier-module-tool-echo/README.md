@@ -1,6 +1,6 @@
 # Echo Tool Module
 
-A simple example tool module for demonstrating local module development with Amplifier Workbench.
+A simple example tool module for demonstrating local module development with Amplifier Playground.
 
 ## Tools Provided
 
@@ -34,7 +34,7 @@ Get the current date and time.
 This module can be loaded from a local workspace directory:
 
 ```bash
-awb session test ./mount-plan.json -p "Echo hello world" -m ./examples/modules
+amplay session test ./mount-plan.json -p "Echo hello world" -m ./examples/modules
 ```
 
 Or referenced in a mount plan:

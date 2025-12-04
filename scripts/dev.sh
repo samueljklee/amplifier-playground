@@ -33,7 +33,7 @@ stop_servers() {
 start_backend() {
     echo -e "${GREEN}Starting backend on port $BACKEND_PORT...${NC}"
     cd "$PROJECT_DIR"
-    uv run uvicorn amplifier_workbench.web.app:app --reload --port $BACKEND_PORT &
+    uv run uvicorn amplifier_playground.web.app:app --reload --port $BACKEND_PORT &
 }
 
 start_frontend() {

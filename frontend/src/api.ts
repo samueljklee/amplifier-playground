@@ -1,4 +1,4 @@
-// API client for Amplifier Workbench
+// API client for Amplifier Playground
 
 import type { ProfileListItem, ProfileContent, ProfileDependencyGraph, SessionInfo, PromptResponse } from './types';
 

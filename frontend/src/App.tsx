@@ -3,6 +3,7 @@ import type { ProfileListItem } from './types';
 import { listProfiles } from './api';
 import { SessionPane } from './components/SessionPane';
 import { DependencyGraphViewer } from './components/DependencyGraphViewer';
+import { HelpModal } from './components/HelpModal';
 import './App.css';
 
 interface Pane {
@@ -14,6 +15,7 @@ function App() {
   const [panes, setPanes] = useState<Pane[]>([{ id: crypto.randomUUID() }]);
   const [error, setError] = useState<string | null>(null);
   const [viewingProfile, setViewingProfile] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Load profiles on mount
   useEffect(() => {
@@ -40,12 +42,15 @@ function App() {
         <div className="header-content">
           <div>
             <h1>Amplifier Playground</h1>
-            <p className="subtitle">Interactive profile testing</p>
+            <p className="subtitle">Build, test, and explore AI agent sessions</p>
           </div>
           <div className="header-actions">
             <span className="pane-count">{panes.length} pane{panes.length !== 1 ? 's' : ''}</span>
             <button onClick={addPane} className="button primary">
               + Add Pane
+            </button>
+            <button onClick={() => setShowHelp(true)} className="button secondary">
+              Help
             </button>
           </div>
         </div>
@@ -74,6 +79,11 @@ function App() {
           profileName={viewingProfile}
           onClose={() => setViewingProfile(null)}
         />
+      )}
+
+      {/* Help Modal */}
+      {showHelp && (
+        <HelpModal onClose={() => setShowHelp(false)} />
       )}
     </div>
   );
