@@ -92,12 +92,12 @@ function App() {
         </div>
       )}
 
-      {/* Setup Banner - show if no API key configured */}
-      {credentials && !credentials.anthropic_api_key.configured && (
+      {/* Setup Banner - show if no credentials are configured */}
+      {credentials && credentials.credentials.every(c => !c.configured) && (
         <div className="setup-banner">
           <span className="setup-banner-icon">!</span>
           <span className="setup-banner-text">
-            <strong>API key required:</strong> Configure your Anthropic API key to start sessions.
+            <strong>API keys required:</strong> Configure at least one provider API key to start sessions.
           </span>
           <button onClick={() => setShowSettings(true)} className="button primary small">
             Configure
@@ -112,6 +112,7 @@ function App() {
             profiles={profiles}
             onClose={() => removePane(pane.id)}
             onViewProfile={setViewingProfile}
+            onOpenSettings={() => setShowSettings(true)}
           />
         ))}
       </main>

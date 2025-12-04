@@ -125,6 +125,48 @@
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.credential-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Per-card messages */
+.credential-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.credential-message.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
+}
+
+.credential-message.success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid var(--success-color);
+  color: var(--success-color);
+}
+
+.credential-message .dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+}
+
+.credential-message .dismiss:hover {
+  opacity: 1;
 }
 
 .credential-header {

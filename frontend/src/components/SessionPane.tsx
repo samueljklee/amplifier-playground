@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Info, FileJson } from 'lucide-react';
+import { Info, FileJson, AlertTriangle } from 'lucide-react';
 import type { ProfileListItem, SessionInfo, Message } from '../types';
-import { createSession, sendPrompt, stopSession, subscribeToEvents } from '../api';
+import { createSession, sendPrompt, stopSession, subscribeToEvents, getProfileCredentials, type ProfileCredentials } from '../api';
 import { SessionInfoModal } from './SessionInfoModal';
 import { MountPlanInputModal } from './MountPlanInputModal';
 
@@ -11,9 +11,10 @@ interface SessionPaneProps {
   profiles: ProfileListItem[];
   onClose: () => void;
   onViewProfile: (profileName: string) => void;
+  onOpenSettings?: () => void;
 }
 
-export function SessionPane({ profiles, onClose, onViewProfile }: SessionPaneProps) {
+export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }: SessionPaneProps) {
   const [selectedProfile, setSelectedProfile] = useState<string>('');
   const [customMountPlan, setCustomMountPlan] = useState<Record<string, unknown> | null>(null);
   const [showMountPlanInput, setShowMountPlanInput] = useState(false);
@@ -25,6 +26,22 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
   const [events, setEvents] = useState<Array<{ event: string; data: unknown }>>([]);
   const [showEvents, setShowEvents] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [credentialStatus, setCredentialStatus] = useState<ProfileCredentials | null>(null);
+
+  // Check credentials when profile changes
+  useEffect(() => {
+    if (!selectedProfile || selectedProfile === CUSTOM_JSON_VALUE) {
+      setCredentialStatus(null);
+      return;
+    }
+
+    getProfileCredentials(selectedProfile)
+      .then(setCredentialStatus)
+      .catch((err) => {
+        console.error('Failed to check credentials:', err);
+        setCredentialStatus(null);
+      });
+  }, [selectedProfile]);
 
   // Derived state: whether we have a valid session config
   const hasValidConfig = selectedProfile && selectedProfile !== CUSTOM_JSON_VALUE
@@ -230,6 +247,21 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
           <button onClick={() => setError(null)} className="dismiss">
             Dismiss
           </button>
+        </div>
+      )}
+
+      {/* Credential Warning Banner */}
+      {credentialStatus && !credentialStatus.ready && !session && (
+        <div className="warning-banner compact">
+          <AlertTriangle size={14} />
+          <span>
+            Missing: {credentialStatus.credentials.filter((c) => !c.configured).map((c) => c.display_name).join(', ')}
+          </span>
+          {onOpenSettings && (
+            <button onClick={onOpenSettings} className="configure-link">
+              Configure
+            </button>
+          )}
         </div>
       )}
 

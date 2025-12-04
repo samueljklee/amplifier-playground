@@ -50,9 +50,17 @@ export interface CredentialStatus {
   masked_value: string | null;
 }
 
+export interface CredentialInfo {
+  key: string;
+  env_var: string;
+  display_name: string;
+  configured: boolean;
+  source: 'env' | 'file' | null;
+  masked_value: string | null;
+}
+
 export interface CredentialsStatus {
-  anthropic_api_key: CredentialStatus;
-  openai_api_key: CredentialStatus;
+  credentials: CredentialInfo[];
 }
 
 export interface Message {

@@ -43,6 +43,30 @@ export async function getProfileDependencyGraph(profileName: string): Promise<Pr
   return response.json();
 }
 
+export interface CredentialRequirement {
+  provider: string;
+  credential_key: string;
+  env_var: string;
+  configured: boolean;
+  display_name: string;
+}
+
+export interface ProfileCredentials {
+  profile: string;
+  providers: string[];
+  credentials: CredentialRequirement[];
+  ready: boolean;
+}
+
+export async function getProfileCredentials(profileName: string): Promise<ProfileCredentials> {
+  const response = await fetch(`${API_BASE}/profiles/${encodeURIComponent(profileName)}/credentials`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to check credentials: ${response.statusText}`);
+  }
+  return response.json();
+}
+
 export interface CreateSessionOptions {
   profile?: string;
   mountPlan?: Record<string, unknown>;
@@ -133,24 +157,24 @@ export async function getCredentialsStatus(): Promise<CredentialsStatus> {
   return response.json();
 }
 
-export async function setAnthropicKey(apiKey: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/settings/credentials/anthropic`, {
+export async function setCredential(credentialKey: string, value: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/settings/credentials/${encodeURIComponent(credentialKey)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ value: apiKey }),
+    body: JSON.stringify({ value }),
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || `Failed to save API key: ${response.statusText}`);
+    throw new Error(error.detail || `Failed to save credential: ${response.statusText}`);
   }
 }
 
-export async function deleteAnthropicKey(): Promise<void> {
-  const response = await fetch(`${API_BASE}/settings/credentials/anthropic`, {
+export async function deleteCredential(credentialKey: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/settings/credentials/${encodeURIComponent(credentialKey)}`, {
     method: 'DELETE',
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || `Failed to delete API key: ${response.statusText}`);
+    throw new Error(error.detail || `Failed to delete credential: ${response.statusText}`);
   }
 }

@@ -9,17 +9,25 @@ from typing import Any
 # Supported credential keys
 ANTHROPIC_API_KEY = "anthropic_api_key"
 OPENAI_API_KEY = "openai_api_key"
+AZURE_OPENAI_API_KEY = "azure_openai_api_key"
+AZURE_OPENAI_ENDPOINT = "azure_openai_endpoint"
+OLLAMA_BASE_URL = "ollama_base_url"
+VLLM_BASE_URL = "vllm_base_url"
 
 # Environment variable mappings
 ENV_VAR_MAPPING = {
     ANTHROPIC_API_KEY: "ANTHROPIC_API_KEY",
     OPENAI_API_KEY: "OPENAI_API_KEY",
+    AZURE_OPENAI_API_KEY: "AZURE_OPENAI_API_KEY",
+    AZURE_OPENAI_ENDPOINT: "AZURE_OPENAI_ENDPOINT",
+    OLLAMA_BASE_URL: "OLLAMA_BASE_URL",
+    VLLM_BASE_URL: "VLLM_BASE_URL",
 }
 
 
 def get_credentials_path() -> Path:
     """Get the path to the credentials file."""
-    return Path.home() / ".amplifier" / "credentials.json"
+    return Path.home() / ".amplifier-playground" / "credentials.json"
 
 
 def _ensure_directory(path: Path) -> None:
@@ -194,3 +202,77 @@ def _mask_key(value: str) -> str:
     if len(value) <= 12:
         return "***"
     return f"{value[:7]}...{value[-4:]}"
+
+
+# Provider module to credential key mapping
+# Maps provider module names to the list of credential keys they require
+PROVIDER_CREDENTIAL_MAPPING: dict[str, list[str]] = {
+    "amplifier-module-provider-anthropic": [ANTHROPIC_API_KEY],
+    "provider-anthropic": [ANTHROPIC_API_KEY],
+    "anthropic": [ANTHROPIC_API_KEY],
+    "amplifier-module-provider-openai": [OPENAI_API_KEY],
+    "provider-openai": [OPENAI_API_KEY],
+    "openai": [OPENAI_API_KEY],
+    "amplifier-module-provider-azure-openai": [AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT],
+    "provider-azure-openai": [AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT],
+    "azure-openai": [AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT],
+    "amplifier-module-provider-ollama": [OLLAMA_BASE_URL],
+    "provider-ollama": [OLLAMA_BASE_URL],
+    "ollama": [OLLAMA_BASE_URL],
+    "amplifier-module-provider-vllm": [VLLM_BASE_URL],
+    "provider-vllm": [VLLM_BASE_URL],
+    "vllm": [VLLM_BASE_URL],
+}
+
+# Display names for credentials
+CREDENTIAL_DISPLAY_NAMES = {
+    ANTHROPIC_API_KEY: "Anthropic API Key",
+    OPENAI_API_KEY: "OpenAI API Key",
+    AZURE_OPENAI_API_KEY: "Azure OpenAI API Key",
+    AZURE_OPENAI_ENDPOINT: "Azure OpenAI Endpoint",
+    OLLAMA_BASE_URL: "Ollama Base URL",
+    VLLM_BASE_URL: "vLLM Base URL",
+}
+
+
+def get_required_credentials_for_providers(provider_modules: list[str]) -> list[dict[str, Any]]:
+    """
+    Get required credentials for a list of provider modules.
+
+    Args:
+        provider_modules: List of provider module names from mount plan
+
+    Returns:
+        List of credential requirements with status:
+        [
+            {
+                "provider": "anthropic",
+                "credential_key": "anthropic_api_key",
+                "env_var": "ANTHROPIC_API_KEY",
+                "configured": True/False,
+                "display_name": "Anthropic API Key"
+            }
+        ]
+    """
+    requirements = []
+    seen_keys = set()
+    status = get_credential_status()
+
+    for module in provider_modules:
+        # Normalize module name (strip git URLs, get base name)
+        module_name = module.split("/")[-1].replace(".git", "")
+
+        credential_keys = PROVIDER_CREDENTIAL_MAPPING.get(module_name, [])
+        for credential_key in credential_keys:
+            if credential_key not in seen_keys:
+                seen_keys.add(credential_key)
+                cred_status = status.get(credential_key, {})
+                requirements.append({
+                    "provider": module_name,
+                    "credential_key": credential_key,
+                    "env_var": ENV_VAR_MAPPING.get(credential_key),
+                    "configured": cred_status.get("configured", False),
+                    "display_name": CREDENTIAL_DISPLAY_NAMES.get(credential_key, credential_key),
+                })
+
+    return requirements

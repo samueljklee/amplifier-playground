@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from amplifier_playground.core import CollectionManager
+from amplifier_playground.core import CollectionManager, get_required_credentials_for_providers
 from amplifier_playground.core.mention_loader import MentionLoader, MentionResolver
 from amplifier_profiles import (
     ProfileLoader,
@@ -507,6 +507,59 @@ async def get_profile_dependency_graph(profile_name: str) -> ProfileDependencyGr
         files=files,
         mount_plan=mount_plan,
     )
+
+
+@router.get("/{profile_name:path}/credentials")
+async def get_profile_credentials(profile_name: str) -> dict[str, Any]:
+    """Get required credentials for a profile based on its providers.
+
+    Compiles the profile to extract provider modules, then checks
+    which credentials are needed and whether they're configured.
+
+    Returns:
+        {
+            "profile": "foundation:base",
+            "providers": ["amplifier-module-provider-anthropic"],
+            "credentials": [
+                {
+                    "provider": "amplifier-module-provider-anthropic",
+                    "credential_key": "anthropic_api_key",
+                    "env_var": "ANTHROPIC_API_KEY",
+                    "configured": true,
+                    "display_name": "Anthropic API Key"
+                }
+            ],
+            "ready": true  # true if all required credentials are configured
+        }
+    """
+    manager = get_collection_manager()
+    loader = build_profile_loader(manager)
+    agent_loader = build_agent_loader(manager)
+
+    try:
+        profile = loader.load_profile(profile_name)
+        mount_plan = compile_profile_to_mount_plan(profile, agent_loader=agent_loader)
+
+        # Extract provider modules from mount plan
+        providers = mount_plan.get("providers", [])
+        provider_modules = [p.get("module", "") for p in providers if p.get("module")]
+
+        # Get credential requirements
+        credentials = get_required_credentials_for_providers(provider_modules)
+
+        # Check if all required credentials are configured
+        ready = all(c.get("configured", False) for c in credentials) if credentials else True
+
+        return {
+            "profile": profile_name,
+            "providers": provider_modules,
+            "credentials": credentials,
+            "ready": ready,
+        }
+    except ProfileError as e:
+        raise HTTPException(status_code=404, detail=f"Profile not found: {profile_name} - {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to check credentials: {e}")
 
 
 @router.get("/{profile_name:path}", response_model=ProfileInfo)

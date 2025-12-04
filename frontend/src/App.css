@@ -30,6 +30,9 @@
   --error-color: #ef4444;
   --error-subtle: rgba(239, 68, 68, 0.1);
 
+  --warning-color: #f59e0b;
+  --warning-subtle: rgba(245, 158, 11, 0.15);
+
   --purple-color: #a855f7;
   --purple-subtle: rgba(168, 85, 247, 0.2);
 
@@ -68,6 +71,9 @@
 
   --error-color: #dc2626;
   --error-subtle: rgba(220, 38, 38, 0.1);
+
+  --warning-color: #d97706;
+  --warning-subtle: rgba(217, 119, 6, 0.15);
 
   --purple-color: #9333ea;
   --purple-subtle: rgba(147, 51, 234, 0.1);
@@ -351,6 +357,48 @@ body {
   cursor: pointer;
   text-decoration: underline;
   font-size: 0.75rem;
+}
+
+/* Warning Banner */
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--warning-subtle);
+  border-bottom: 1px solid var(--warning-color);
+  color: var(--warning-color);
+  font-size: 0.8125rem;
+}
+
+.warning-banner.compact {
+  margin: 0.5rem;
+  border: 1px solid var(--warning-color);
+  border-radius: 6px;
+  width: fit-content;
+  max-width: calc(100% - 1rem);
+}
+
+.warning-banner svg {
+  flex-shrink: 0;
+}
+
+.warning-banner .configure-link {
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--warning-color);
+  border-radius: 4px;
+  color: var(--warning-color);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.warning-banner .configure-link:hover {
+  background: var(--warning-color);
+  color: var(--bg-primary);
 }
 
 /* Pane Content */

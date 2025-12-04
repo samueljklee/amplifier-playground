@@ -16,14 +16,13 @@ dependencies = [
     "sse-starlette>=1.6.0",
     "pydantic>=2.0",
     "anthropic>=0.75.0",
-    "amplifier-collections",
     "pyyaml>=6.0",
 ]
 
 [tool.uv.sources]
 amplifier-core = { git = "https://github.com/microsoft/amplifier-core", branch = "main" }
 amplifier-config = { git = "https://github.com/microsoft/amplifier-config", branch = "main" }
-amplifier-module-resolution = { git = "https://github.com/microsoft/amplifier-module-resolution", branch = "main" }
+amplifier-module-resolution = { path = "modules/amplifier-module-resolution", editable = true }
 amplifier-profiles = { git = "https://github.com/microsoft/amplifier-profiles", branch = "main" }
 amplifier-module-provider-openai = { git = "https://github.com/microsoft/amplifier-module-provider-openai", branch = "main" }
 amplifier-module-provider-anthropic = { git = "https://github.com/microsoft/amplifier-module-provider-anthropic", branch = "main" }

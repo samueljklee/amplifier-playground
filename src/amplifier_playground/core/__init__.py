@@ -5,11 +5,16 @@ from .config_manager import ConfigManager, MountPlanConfig
 from .credentials import (
     get_credential,
     get_credential_status,
+    get_required_credentials_for_providers,
     load_credentials_to_env,
     set_credential,
     delete_credential,
     ANTHROPIC_API_KEY,
     OPENAI_API_KEY,
+    AZURE_OPENAI_API_KEY,
+    AZURE_OPENAI_ENDPOINT,
+    OLLAMA_BASE_URL,
+    VLLM_BASE_URL,
 )
 from .module_registry import ModuleInfo, ModuleRegistry
 from .protocols import EventCallback
@@ -31,11 +36,16 @@ __all__ = [
     # Credentials
     "get_credential",
     "get_credential_status",
+    "get_required_credentials_for_providers",
     "load_credentials_to_env",
     "set_credential",
     "delete_credential",
     "ANTHROPIC_API_KEY",
     "OPENAI_API_KEY",
+    "AZURE_OPENAI_API_KEY",
+    "AZURE_OPENAI_ENDPOINT",
+    "OLLAMA_BASE_URL",
+    "VLLM_BASE_URL",
     # Modules
     "ModuleRegistry",
     "ModuleInfo",
