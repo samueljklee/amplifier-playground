@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, MessageSquare } from 'lucide-react';
 import type { ProfileListItem, CredentialsStatus } from './types';
 import { listProfiles, getCredentialsStatus } from './api';
 import { SessionPane } from './components/SessionPane';
@@ -70,6 +70,15 @@ function App() {
             >
               <Settings size={16} />
             </button>
+            <a
+              href="https://github.com/samueljklee/amplifier-playground/issues/new?template=feedback.md&title=[Feedback]%20"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button icon-btn secondary"
+              title="Send Feedback"
+            >
+              <MessageSquare size={16} />
+            </a>
             <button onClick={() => setShowHelp(true)} className="button secondary">
               Help
             </button>

@@ -41,7 +41,18 @@ export function HelpModal({ onClose }: HelpModalProps) {
               <p>
                 Profiles define how an AI session is configured - which model to use,
                 what tools are available, and what context to include. They live in
-                <code>.amplifier/profiles/</code> in your project.
+                <code>.amplifier/profiles/</code> in your project. Profiles are
+                human-readable YAML files that get compiled into mount plans.
+              </p>
+            </div>
+
+            <div className="concept">
+              <h4>Mount Plans</h4>
+              <p>
+                Mount plans are the compiled JSON configuration that Amplifier uses
+                to run sessions. They contain the fully-resolved session settings,
+                providers, tools, hooks, and agents. You can paste a mount plan JSON
+                directly in the playground to test configurations without creating a profile.
               </p>
             </div>
 
@@ -74,10 +85,11 @@ export function HelpModal({ onClose }: HelpModalProps) {
           <section>
             <h3>Using the Playground</h3>
             <ol>
-              <li><strong>Select a profile</strong> from the dropdown</li>
-              <li><strong>Click "View Graph"</strong> to explore its dependencies</li>
-              <li><strong>Start a session</strong> to test the configuration</li>
-              <li><strong>Add panes</strong> to compare multiple profiles</li>
+              <li><strong>Select a configuration</strong> - choose a profile from the dropdown,
+                or select "Paste mount plan JSON..." to use a raw mount plan</li>
+              <li><strong>Click "View"</strong> to explore a profile's dependencies and mount plan</li>
+              <li><strong>Start a session</strong> by sending a message to test the configuration</li>
+              <li><strong>Add panes</strong> to compare multiple configurations side-by-side</li>
             </ol>
           </section>
 

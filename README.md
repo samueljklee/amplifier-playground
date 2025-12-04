@@ -5,10 +5,10 @@ Interactive environment for building, configuring, and testing Amplifier AI agen
 ## Quickstart
 
 ```bash
-# Run directly with uvx (no installation needed)
-uvx amplifier-playground
+# Fastest way - run directly from GitHub (no installation needed)
+uvx --from git+https://github.com/samueljklee/amplifier-playground amplay
 
-# Or install from source
+# Or clone for example profiles and development
 git clone https://github.com/samueljklee/amplifier-playground
 cd amplifier-playground
 uv sync
@@ -16,6 +16,23 @@ amplay
 ```
 
 That's it! The web UI opens automatically at `http://localhost:8000`.
+
+> **Note**: Running via `uvx` is the quickest way to try the playground. Clone the repository if you want access to example profiles or want to contribute.
+
+## Profiles vs Mount Plans
+
+**Profiles** are human-readable YAML files that define session configurations. They live in `.amplifier/profiles/` and can extend other profiles, reference modules, and include context files. Profiles are meant for reusable, version-controlled configurations.
+
+**Mount Plans** are the compiled JSON configuration that Amplifier uses to run sessions. When you select a profile, it gets compiled into a mount plan containing the fully-resolved session settings, providers, tools, hooks, and agents.
+
+In the playground, you can:
+- **Select a profile** from the dropdown to use an existing configuration
+- **Paste mount plan JSON** directly to test configurations without creating a profile
+
+This is useful for:
+- Testing mount plans exported from other tools
+- Quick experiments without modifying your profile files
+- Debugging and inspecting exact session configurations
 
 ### CLI Options
 
@@ -95,12 +112,14 @@ amplay session run my-profile -i
 # Stream events as JSONL (useful for automation)
 amplay session run my-profile -p "Test prompt" -e
 
-# Quick test a mount plan file without saving
+# Quick test a mount plan JSON file without saving as a profile
 amplay session test ./mount-plan.json -p "Test this configuration"
 
 # Use modules from a local development directory
 amplay session run my-profile -p "Hello" -m ../amplifier-dev
 ```
+
+**Web UI**: You can also paste mount plan JSON directly in the web UI by selecting "Paste mount plan JSON..." from the configuration dropdown.
 
 **Note on `--modules-dir` / `-m`**: This option enables runtime module resolution from a development workspace. Point it at a directory containing `amplifier-module-*` folders (e.g., `amplifier-module-provider-anthropic/`). Modules don't need to be installed as packages - the playground will load them directly from the filesystem.
 
