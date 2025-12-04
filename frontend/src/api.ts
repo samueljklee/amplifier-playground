@@ -43,11 +43,23 @@ export async function getProfileDependencyGraph(profileName: string): Promise<Pr
   return response.json();
 }
 
-export async function createSession(profile: string): Promise<SessionInfo> {
+export interface CreateSessionOptions {
+  profile?: string;
+  mountPlan?: Record<string, unknown>;
+}
+
+export async function createSession(options: CreateSessionOptions): Promise<SessionInfo> {
+  const body: Record<string, unknown> = {};
+  if (options.profile) {
+    body.profile = options.profile;
+  } else if (options.mountPlan) {
+    body.mount_plan = options.mountPlan;
+  }
+
   const response = await fetch(`${API_BASE}/sessions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ profile }),
+    body: JSON.stringify(body),
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));

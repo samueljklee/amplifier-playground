@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Info } from 'lucide-react';
+import { Info, FileJson } from 'lucide-react';
 import type { ProfileListItem, SessionInfo, Message } from '../types';
 import { createSession, sendPrompt, stopSession, subscribeToEvents } from '../api';
 import { SessionInfoModal } from './SessionInfoModal';
+import { MountPlanInputModal } from './MountPlanInputModal';
+
+const CUSTOM_JSON_VALUE = '__custom_json__';
 
 interface SessionPaneProps {
   profiles: ProfileListItem[];
@@ -12,6 +15,8 @@ interface SessionPaneProps {
 
 export function SessionPane({ profiles, onClose, onViewProfile }: SessionPaneProps) {
   const [selectedProfile, setSelectedProfile] = useState<string>('');
+  const [customMountPlan, setCustomMountPlan] = useState<Record<string, unknown> | null>(null);
+  const [showMountPlanInput, setShowMountPlanInput] = useState(false);
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -20,6 +25,11 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
   const [events, setEvents] = useState<Array<{ event: string; data: unknown }>>([]);
   const [showEvents, setShowEvents] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+
+  // Derived state: whether we have a valid session config
+  const hasValidConfig = selectedProfile && selectedProfile !== CUSTOM_JSON_VALUE
+    ? true
+    : customMountPlan !== null;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventsEndRef = useRef<HTMLDivElement>(null);
@@ -71,8 +81,8 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
 
   const handleSend = useCallback(async () => {
     if (!input.trim()) return;
-    if (!selectedProfile) {
-      setError('Please select a profile first');
+    if (!hasValidConfig) {
+      setError('Please select a profile or configure a custom mount plan');
       return;
     }
 
@@ -87,12 +97,22 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
       if (!currentSession) {
         setMessages([]);
         setEvents([]);
-        currentSession = await createSession(selectedProfile);
+
+        // Create session with profile or custom mount plan
+        const isCustom = selectedProfile === CUSTOM_JSON_VALUE && customMountPlan;
+        if (isCustom) {
+          currentSession = await createSession({ mountPlan: customMountPlan });
+        } else {
+          currentSession = await createSession({ profile: selectedProfile });
+        }
+
         setSession(currentSession);
         setMessages([
           {
             role: 'system',
-            content: `Session started with profile: ${selectedProfile}`,
+            content: isCustom
+              ? 'Session started with custom mount plan'
+              : `Session started with profile: ${selectedProfile}`,
             timestamp: new Date(),
           },
         ]);
@@ -115,7 +135,7 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
     } finally {
       setLoading(false);
     }
-  }, [session, input, selectedProfile]);
+  }, [session, input, selectedProfile, customMountPlan, hasValidConfig]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -130,11 +150,20 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
       <div className="pane-header">
         <select
           value={selectedProfile}
-          onChange={(e) => setSelectedProfile(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSelectedProfile(value);
+            if (value === CUSTOM_JSON_VALUE) {
+              setShowMountPlanInput(true);
+            } else {
+              setCustomMountPlan(null);
+            }
+          }}
           disabled={!!session || loading}
           className="profile-select-inline"
         >
-          <option value="">Select profile...</option>
+          <option value="">Select configuration...</option>
+          <option value={CUSTOM_JSON_VALUE}>Paste mount plan JSON...</option>
           {profiles.map((p) => (
             <option key={p.path} value={p.name}>
               {p.name}
@@ -142,10 +171,21 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
           ))}
         </select>
 
+        {selectedProfile === CUSTOM_JSON_VALUE && customMountPlan && (
+          <button
+            onClick={() => setShowMountPlanInput(true)}
+            disabled={!!session || loading}
+            className="button small icon-btn"
+            title="Edit custom mount plan"
+          >
+            <FileJson size={14} />
+          </button>
+        )}
+
         <div className="pane-controls">
           <button
-            onClick={() => selectedProfile && onViewProfile(selectedProfile)}
-            disabled={!selectedProfile}
+            onClick={() => selectedProfile && selectedProfile !== CUSTOM_JSON_VALUE && onViewProfile(selectedProfile)}
+            disabled={!selectedProfile || selectedProfile === CUSTOM_JSON_VALUE}
             className="button small"
             title="View profile"
           >
@@ -200,7 +240,7 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
           <div className="messages">
             {messages.length === 0 ? (
               <div className="empty-state center">
-                <p>{selectedProfile ? 'Send a message to start' : 'Select a profile to begin'}</p>
+                <p>{hasValidConfig ? 'Send a message to start' : 'Select a configuration to begin'}</p>
               </div>
             ) : (
               messages.map((msg, i) => (
@@ -228,14 +268,14 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder={selectedProfile ? 'Type a message to start...' : 'Select a profile first'}
-              disabled={!selectedProfile || loading}
+              placeholder={hasValidConfig ? 'Type a message to start...' : 'Select a configuration first'}
+              disabled={!hasValidConfig || loading}
               rows={2}
               className="message-input"
             />
             <button
               onClick={handleSend}
-              disabled={!selectedProfile || !input.trim() || loading}
+              disabled={!hasValidConfig || !input.trim() || loading}
               className="button primary send-button"
             >
               {loading && !session ? 'Starting...' : 'Send'}
@@ -270,6 +310,24 @@ export function SessionPane({ profiles, onClose, onViewProfile }: SessionPanePro
         <SessionInfoModal
           sessionId={session.session_id}
           onClose={() => setShowInfo(false)}
+        />
+      )}
+
+      {/* Mount Plan Input Modal */}
+      {showMountPlanInput && (
+        <MountPlanInputModal
+          initialValue={customMountPlan ? JSON.stringify(customMountPlan, null, 2) : ''}
+          onConfirm={(plan) => {
+            setCustomMountPlan(plan);
+            setShowMountPlanInput(false);
+          }}
+          onClose={() => {
+            setShowMountPlanInput(false);
+            // If no custom plan was set, revert selection
+            if (!customMountPlan) {
+              setSelectedProfile('');
+            }
+          }}
         />
       )}
     </div>
