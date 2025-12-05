@@ -467,7 +467,7 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
   };
 
   // Handle profile resource drop on canvas
-  const handleProfileResourceDrop = (e: DragEvent) => {
+  const handleProfileResourceDrop = async (e: DragEvent) => {
     e.preventDefault();
     setDragOverProfileResources(false);
     try {
@@ -483,11 +483,36 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
       );
       if (exists) return;
 
+      // Load content from backend if not already loaded
+      let content = moduleData.content || '';
+      if (!content) {
+        try {
+          // Extract collection name from path (format: /path/to/collections/collection-name/agents/agent-name.md)
+          const pathParts = moduleData.path.split('/');
+          const collectionsIndex = pathParts.findIndex((p: string) => p === 'collections');
+          if (collectionsIndex !== -1 && collectionsIndex + 1 < pathParts.length) {
+            const collectionName = pathParts[collectionsIndex + 1];
+            const agentName = moduleData.name;
+            
+            if (moduleData.category === 'profile-agent') {
+              const { getCollectionAgentContent } = await import('../api');
+              content = await getCollectionAgentContent(collectionName, agentName);
+            } else {
+              const { getCollectionContextContent } = await import('../api');
+              content = await getCollectionContextContent(collectionName, agentName);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load resource content:', err);
+          // Continue with empty content - user can still use it
+        }
+      }
+
       // Add to dropped resources (not availableResources - that's the source)
       const newResource: ProfileResource = {
         name: moduleData.name,
         path: moduleData.path,
-        content: moduleData.content || '',
+        content,
         file_type: moduleData.category === 'profile-agent' ? 'agent' : 'context',
       };
       setDroppedResources((prev) => [...prev, newResource]);
@@ -722,79 +747,102 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
   // This function only populates the canvas state, not the palette
   const importFromProfile = async (profileName: string) => {
     try {
+      console.log('Importing profile:', profileName);
       const graph = await getProfileDependencyGraph(profileName);
+      console.log('Profile graph response:', graph);
+
+      if (!graph.mount_plan) {
+        console.warn('Profile has no mount_plan:', profileName);
+        alert(`Profile "${profileName}" has no mount plan to import. The profile may not define any providers, tools, or hooks.`);
+        return;
+      }
+
+      const plan = graph.mount_plan;
       setSelectedProfileName(profileName);
 
-      if (graph.mount_plan) {
-        const plan = graph.mount_plan;
+      // Track what was imported for logging
+      let imported = { providers: 0, tools: 0, hooks: 0, agents: 0 };
 
-        // Import session settings
-        if (plan.session) {
-          setSessionSettings({
-            orchestrator: (plan.session.orchestrator as string) || 'loop-streaming',
-            context: (plan.session.context as string) || 'context-simple',
-          });
-        }
+      // Import session settings (only if the profile defines them)
+      if (plan.session) {
+        const orchValue = plan.session.orchestrator;
+        const ctxValue = plan.session.context;
+        const orchModule = typeof orchValue === 'string' ? orchValue : (orchValue as { module?: string })?.module;
+        const ctxModule = typeof ctxValue === 'string' ? ctxValue : (ctxValue as { module?: string })?.module;
 
-        // Import providers
-        if (plan.providers) {
-          const newProviders: BuilderModule[] = plan.providers.map((p) => ({
-            id: crypto.randomUUID(),
-            module: p.module,
-            source: p.source,
-            config: p.config,
-          }));
-          setBuilderState((prev) => ({
+        if (orchModule || ctxModule) {
+          setSessionSettings((prev) => ({
             ...prev,
-            providers: [...prev.providers, ...newProviders],
-          }));
-        }
-
-        // Import tools
-        if (plan.tools) {
-          const newTools: BuilderModule[] = plan.tools.map((t) => ({
-            id: crypto.randomUUID(),
-            module: t.module,
-            source: t.source,
-            config: t.config,
-          }));
-          setBuilderState((prev) => ({
-            ...prev,
-            tools: [...prev.tools, ...newTools],
-          }));
-        }
-
-        // Import hooks
-        if (plan.hooks) {
-          const newHooks: BuilderModule[] = plan.hooks.map((h) => ({
-            id: crypto.randomUUID(),
-            module: h.module,
-            source: h.source,
-            config: h.config,
-          }));
-          setBuilderState((prev) => ({
-            ...prev,
-            hooks: [...prev.hooks, ...newHooks],
-          }));
-        }
-
-        // Import agents
-        if (plan.agents) {
-          const newAgents: BuilderAgent[] = Object.entries(plan.agents as Record<string, AgentConfig>).map(
-            ([name, config]) => ({
-              id: crypto.randomUUID(),
-              name,
-              description: config.description || '',
-              tools: config.tools || [],
-            })
-          );
-          setBuilderState((prev) => ({
-            ...prev,
-            agents: [...prev.agents, ...newAgents],
+            orchestrator: orchModule || prev.orchestrator,
+            context: ctxModule || prev.context,
           }));
         }
       }
 
+      // Import providers (extend existing)
+      if (plan.providers && plan.providers.length > 0) {
+        const newProviders: BuilderModule[] = plan.providers.map((p) => ({
+          id: crypto.randomUUID(),
+          module: p.module,
+          source: p.source,
+          config: p.config,
+        }));
+        setBuilderState((prev) => ({
+          ...prev,
+          providers: [...prev.providers, ...newProviders],
+        }));
+        imported.providers = newProviders.length;
+      }
+
+      // Import tools (extend existing)
+      if (plan.tools && plan.tools.length > 0) {
+        const newTools: BuilderModule[] = plan.tools.map((t) => ({
+          id: crypto.randomUUID(),
+          module: t.module,
+          source: t.source,
+          config: t.config,
+        }));
+        setBuilderState((prev) => ({
+          ...prev,
+          tools: [...prev.tools, ...newTools],
+        }));
+        imported.tools = newTools.length;
+      }
+
+      // Import hooks (extend existing)
+      if (plan.hooks && plan.hooks.length > 0) {
+        const newHooks: BuilderModule[] = plan.hooks.map((h) => ({
+          id: crypto.randomUUID(),
+          module: h.module,
+          source: h.source,
+          config: h.config,
+        }));
+        setBuilderState((prev) => ({
+          ...prev,
+          hooks: [...prev.hooks, ...newHooks],
+        }));
+        imported.hooks = newHooks.length;
+      }
+
+      // Import agents (extend existing)
+      if (plan.agents && Object.keys(plan.agents).length > 0) {
+        const newAgents: BuilderAgent[] = Object.entries(plan.agents as Record<string, AgentConfig>).map(
+          ([name, config]) => ({
+            id: crypto.randomUUID(),
+            name,
+            description: config.description || '',
+            instruction: config.instruction as string | undefined,
+            tools: config.tools || [],
+          })
+        );
+        setBuilderState((prev) => ({
+          ...prev,
+          agents: [...prev.agents, ...newAgents],
+        }));
+        imported.agents = newAgents.length;
+      }
+
+      console.log('Imported from profile:', imported);
       setShowProfileImport(false);
     } catch (e) {
       console.error('Failed to import profile:', e);
@@ -877,9 +925,37 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
         plan.agents = {};
       }
       for (const agent of droppedAgents) {
-        // Use name as the key, content as instruction
+        // Parse agent content to extract description and instruction
+        // Agent files have YAML frontmatter with meta.description and body content as instruction
+        let description: string | undefined;
+        let instruction: string | undefined;
+
+        if (agent.content) {
+          // Simple parser: split by '---' markers to extract frontmatter and body
+          const parts = agent.content.split(/^---\s*$/m);
+          if (parts.length >= 3) {
+            // Format: [empty, frontmatter, body, ...]
+            const frontmatter = parts[1];
+            const body = parts.slice(2).join('---').trim();
+            
+            // Extract description from frontmatter (simple regex match)
+            const descMatch = frontmatter.match(/description:\s*["'](.+?)["']/s);
+            if (descMatch) {
+              description = descMatch[1];
+            }
+            
+            // Body is the instruction
+            instruction = body || undefined;
+          } else {
+            // No frontmatter, entire content is instruction
+            instruction = agent.content;
+          }
+        }
+
+        // Use name as the key
         plan.agents[agent.name] = {
-          instruction: agent.content || undefined,
+          ...(description && { description }),
+          ...(instruction && { instruction }),
         };
       }
     }

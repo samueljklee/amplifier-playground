@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
@@ -15,6 +16,22 @@ from .protocols import EventCallback
 from .ux_systems import PlaygroundApprovalSystem, PlaygroundDisplaySystem
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ContentBlock:
+    """A content block in a response (text or thinking)."""
+
+    type: str  # "text" or "thinking"
+    content: str
+
+
+@dataclass
+class PromptResult:
+    """Result from a prompt execution including content blocks."""
+
+    response: str
+    content_blocks: list[ContentBlock] = field(default_factory=list)
 
 
 class SessionRunner:
@@ -68,6 +85,10 @@ class SessionRunner:
         self._display_system: PlaygroundDisplaySystem | None = None
         self._started = False
         self._unregister_hook: Any = None
+
+        # Accumulated thinking content for the current prompt execution
+        self._thinking_content: list[str] = []
+        self._thinking_lock = asyncio.Lock()
 
     async def start(self) -> str:
         """
@@ -138,9 +159,39 @@ class SessionRunner:
             hooks = self._session.coordinator.hooks
 
             async def capture_all_events(event: str, data: dict[str, Any]) -> HookResult:
-                """Forward all events to callback."""
+                """Forward all events to callback and capture thinking content."""
                 try:
                     await self.event_callback(event, data)  # type: ignore
+
+                    # Capture thinking content from content_block events
+                    # The content_block:end event has a nested 'block' object containing type and content
+                    thinking_text = None
+
+                    if event == "content_block:end":
+                        # The block object contains type and thinking/text content
+                        block = data.get("block", {})
+                        block_type = block.get("type") if isinstance(block, dict) else getattr(block, "type", None)
+
+                        if block_type == "thinking":
+                            # Extract thinking text from block object
+                            if isinstance(block, dict):
+                                thinking_text = block.get("thinking", "") or block.get("text", "") or block.get("content", "")
+                            else:
+                                # Handle object with attributes
+                                thinking_text = getattr(block, "thinking", "") or getattr(block, "text", "") or getattr(block, "content", "")
+                            logger.info(f"THINKING from content_block:end: {len(thinking_text) if thinking_text else 0} chars")
+
+                    elif event == "thinking:final":
+                        # thinking:final event carries the complete thinking content
+                        thinking_text = data.get("text", "") or data.get("content", "") or data.get("thinking", "")
+                        logger.info(f"THINKING from thinking:final: {len(thinking_text) if thinking_text else 0} chars")
+
+                    # Add thinking content if captured from either event type
+                    if thinking_text:
+                        async with self._thinking_lock:
+                            self._thinking_content.append(thinking_text)
+                            logger.info(f"Added thinking content. Total blocks: {len(self._thinking_content)}")
+
                 except Exception as e:
                     logger.warning(f"Event callback failed for {event}: {e}")
                 return HookResult(action="continue")
@@ -171,15 +222,15 @@ class SessionRunner:
         logger.info(f"Session started: {self.session_id}")
         return self.session_id
 
-    async def prompt(self, text: str) -> str:
+    async def prompt(self, text: str) -> PromptResult:
         """
-        Send a prompt and get response.
+        Send a prompt and get response with content blocks.
 
         Args:
             text: User prompt text
 
         Returns:
-            Response string
+            PromptResult with response text and content blocks (thinking, etc.)
 
         Raises:
             RuntimeError: If session not started
@@ -187,7 +238,27 @@ class SessionRunner:
         if not self._started or self._session is None:
             raise RuntimeError("Session not started. Call start() first.")
 
-        return await self._session.execute(text)
+        # Clear thinking content from previous prompt
+        async with self._thinking_lock:
+            self._thinking_content.clear()
+
+        # Execute the prompt
+        response_text = await self._session.execute(text)
+
+        # Build content blocks from captured thinking and response
+        content_blocks: list[ContentBlock] = []
+
+        # Get captured thinking content
+        async with self._thinking_lock:
+            logger.info(f"Building content blocks. _thinking_content has {len(self._thinking_content)} items")
+            for thinking_text in self._thinking_content:
+                logger.info(f"Adding thinking block: {len(thinking_text)} chars")
+                content_blocks.append(ContentBlock(type="thinking", content=thinking_text))
+
+        # Add the text response as a block
+        content_blocks.append(ContentBlock(type="text", content=response_text))
+
+        return PromptResult(response=response_text, content_blocks=content_blocks)
 
     async def stop(self) -> None:
         """Stop and cleanup the session."""

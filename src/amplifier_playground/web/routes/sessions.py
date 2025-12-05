@@ -20,6 +20,7 @@ from amplifier_profiles import (
 
 from ..models import (
     ApprovalRequest,
+    ContentBlock,
     CreateSessionRequest,
     PromptRequest,
     PromptResponse,
@@ -301,11 +302,18 @@ async def send_prompt(session_id: str, request: PromptRequest) -> PromptResponse
     if not runner:
         raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
 
-    response = await runner.prompt(request.text)
+    result = await runner.prompt(request.text)
+
+    # Map core ContentBlock dataclass to API ContentBlock pydantic model
+    content_blocks = [
+        ContentBlock(type=block.type, content=block.content)
+        for block in result.content_blocks
+    ]
 
     return PromptResponse(
-        response=response,
+        response=result.response,
         session_id=session_id,
+        content_blocks=content_blocks,
     )
 
 

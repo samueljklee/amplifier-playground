@@ -34,9 +34,16 @@ export interface SessionDetailInfo {
   created_at: string | null;
 }
 
+// Content block for structured responses (text and thinking blocks)
+export interface ContentBlock {
+  type: 'text' | 'thinking';
+  content: string;
+}
+
 export interface PromptResponse {
   response: string;
   session_id: string;
+  content_blocks?: ContentBlock[];
 }
 
 export interface SessionEvent {
@@ -71,9 +78,13 @@ export interface CredentialsStatus {
 }
 
 export interface Message {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant' | 'system' | 'thinking' | 'tool' | 'tool-result';
   content: string;
   timestamp: Date;
+  // For tool messages
+  toolName?: string;
+  toolId?: string;
+  toolSuccess?: boolean;
 }
 
 export interface ProfileContent {
