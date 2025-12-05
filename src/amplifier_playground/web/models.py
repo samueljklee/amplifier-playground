@@ -218,11 +218,19 @@ class PromptRequest(BaseModel):
     text: str
 
 
+class ContentBlock(BaseModel):
+    """A block of content in the response (text or thinking)."""
+
+    type: str  # "text" or "thinking"
+    content: str
+
+
 class PromptResponse(BaseModel):
     """Response from a prompt."""
 
     response: str
     session_id: str
+    content_blocks: list[ContentBlock] | None = None
 
 
 class ApprovalRequest(BaseModel):
