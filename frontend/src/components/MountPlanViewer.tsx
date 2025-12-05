@@ -233,6 +233,24 @@ export function MountPlanViewer({ plan }: MountPlanViewerProps) {
               </div>
             )}
           </div>
+          {/* Orchestrator config */}
+          {(plan as any).orchestrator?.config && (
+            <div className="session-config-section">
+              <div className="session-config-header">Orchestrator Configuration</div>
+              <div className="session-config-content">
+                <ConfigDisplay config={(plan as any).orchestrator.config} />
+              </div>
+            </div>
+          )}
+          {/* Context config */}
+          {(plan as any).context?.config && (
+            <div className="session-config-section">
+              <div className="session-config-header">Context Configuration</div>
+              <div className="session-config-content">
+                <ConfigDisplay config={(plan as any).context.config} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

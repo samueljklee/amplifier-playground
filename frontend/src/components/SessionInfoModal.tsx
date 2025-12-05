@@ -8,7 +8,7 @@ interface SessionInfoModalProps {
   onClose: () => void;
 }
 
-type InfoSection = 'overview' | 'mount_plan' | 'session' | 'providers' | 'tools' | 'hooks';
+type InfoSection = 'overview' | 'mount_plan' | 'session' | 'providers' | 'tools' | 'hooks' | 'agents';
 
 interface SectionInfo {
   key: InfoSection;
@@ -18,12 +18,14 @@ interface SectionInfo {
 
 function getSections(details: SessionDetailInfo | null): SectionInfo[] {
   const mountPlan = details?.mount_plan as Record<string, unknown> | null;
+  const agents = mountPlan?.agents as Record<string, unknown> | undefined;
   return [
     { key: 'overview', label: 'Overview', available: true },
     { key: 'session', label: 'Session Config', available: !!mountPlan?.session },
     { key: 'providers', label: 'Providers', available: Array.isArray(mountPlan?.providers) && (mountPlan?.providers as unknown[]).length > 0 },
     { key: 'tools', label: 'Tools', available: Array.isArray(mountPlan?.tools) && (mountPlan?.tools as unknown[]).length > 0 },
     { key: 'hooks', label: 'Hooks', available: Array.isArray(mountPlan?.hooks) && (mountPlan?.hooks as unknown[]).length > 0 },
+    { key: 'agents', label: 'Agents', available: !!agents && Object.keys(agents).length > 0 },
     { key: 'mount_plan', label: 'Full Mount Plan', available: !!mountPlan },
   ];
 }
@@ -197,6 +199,32 @@ export function SessionInfoModal({ sessionId, onClose }: SessionInfoModalProps) 
               </div>
             ) : (
               <p className="empty-note">No hooks configured</p>
+            )}
+          </div>
+        );
+
+      case 'agents':
+        const agents = mountPlan?.agents as Record<string, unknown> | undefined;
+        const agentEntries = agents ? Object.entries(agents) : [];
+        return (
+          <div className="info-section">
+            <h3>Agents ({agentEntries.length})</h3>
+            {agentEntries.length > 0 ? (
+              <div className="item-list">
+                {agentEntries.map(([name, config]) => {
+                  return (
+                    <div key={name} className="list-item">
+                      <div className="list-item-header">
+                        <span className="item-badge agent">Agent</span>
+                        <span className="item-name">{name}</span>
+                      </div>
+                      <pre className="json-content small">{JSON.stringify(config, null, 2)}</pre>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="empty-note">No agents configured</p>
             )}
           </div>
         );

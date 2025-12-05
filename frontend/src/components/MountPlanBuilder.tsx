@@ -59,6 +59,8 @@ interface BuilderState {
 interface SessionSettings {
   orchestrator: string;
   context: string;
+  orchestratorConfig?: Record<string, unknown>;
+  contextConfig?: Record<string, unknown>;
 }
 
 const CATEGORY_ICONS: Record<string, typeof Zap> = {
@@ -129,6 +131,8 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
   const [sessionSettings, setSessionSettings] = useState<SessionSettings>({
     orchestrator: 'loop-streaming',
     context: 'context-simple',
+    orchestratorConfig: undefined,
+    contextConfig: undefined,
   });
 
   // Builder state
@@ -174,6 +178,8 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
       setSessionSettings({
         orchestrator: typeof orch === 'string' ? orch : orch?.module || 'loop-streaming',
         context: typeof ctx === 'string' ? ctx : ctx?.module || 'context-simple',
+        orchestratorConfig: (initialMountPlan as any).orchestrator?.config,
+        contextConfig: (initialMountPlan as any).context?.config,
       });
     }
 
@@ -815,6 +821,20 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
       },
     };
 
+    // Add orchestrator config if provided
+    if (sessionSettings.orchestratorConfig && Object.keys(sessionSettings.orchestratorConfig).length > 0) {
+      (plan as any).orchestrator = {
+        config: sessionSettings.orchestratorConfig,
+      };
+    }
+
+    // Add context config if provided
+    if (sessionSettings.contextConfig && Object.keys(sessionSettings.contextConfig).length > 0) {
+      (plan as any).context = {
+        config: sessionSettings.contextConfig,
+      };
+    }
+
     if (builderState.providers.length > 0) {
       plan.providers = builderState.providers.map(({ module, source, config }) => ({
         module,
@@ -1253,45 +1273,91 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
                 <span>SESSION SETTINGS</span>
               </div>
               <div className="session-settings-content">
-                <div className="session-setting">
-                  <label htmlFor="orchestrator">
-                    <Cpu size={12} style={{ color: CATEGORY_COLORS.orchestrator }} />
-                    Orchestrator
-                  </label>
-                  <select
-                    id="orchestrator"
-                    value={sessionSettings.orchestrator}
-                    onChange={(e) => setSessionSettings((s) => ({ ...s, orchestrator: e.target.value }))}
-                  >
-                    {KNOWN_ORCHESTRATORS.map((orch) => (
-                      <option key={orch.id} value={orch.id}>
-                        {orch.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="setting-description">
-                    {KNOWN_ORCHESTRATORS.find((o) => o.id === sessionSettings.orchestrator)?.description}
-                  </span>
+                <div className="session-settings-row">
+                  <div className="session-setting">
+                    <label htmlFor="orchestrator">
+                      <Cpu size={12} style={{ color: CATEGORY_COLORS.orchestrator }} />
+                      Orchestrator
+                    </label>
+                    <select
+                      id="orchestrator"
+                      value={sessionSettings.orchestrator}
+                      onChange={(e) => setSessionSettings((s) => ({ ...s, orchestrator: e.target.value }))}
+                    >
+                      {KNOWN_ORCHESTRATORS.map((orch) => (
+                        <option key={orch.id} value={orch.id}>
+                          {orch.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="setting-description">
+                      {KNOWN_ORCHESTRATORS.find((o) => o.id === sessionSettings.orchestrator)?.description}
+                    </span>
+                  </div>
+                  <div className="session-setting">
+                    <label htmlFor="context">
+                      <Database size={12} style={{ color: CATEGORY_COLORS.context }} />
+                      Context
+                    </label>
+                    <select
+                      id="context"
+                      value={sessionSettings.context}
+                      onChange={(e) => setSessionSettings((s) => ({ ...s, context: e.target.value }))}
+                    >
+                      {KNOWN_CONTEXTS.map((ctx) => (
+                        <option key={ctx.id} value={ctx.id}>
+                          {ctx.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="setting-description">
+                      {KNOWN_CONTEXTS.find((c) => c.id === sessionSettings.context)?.description}
+                    </span>
+                  </div>
                 </div>
-                <div className="session-setting">
-                  <label htmlFor="context">
-                    <Database size={12} style={{ color: CATEGORY_COLORS.context }} />
-                    Context
+
+                {/* Orchestrator Config */}
+                <div className="session-config-editor">
+                  <label>
+                    <Settings size={12} />
+                    Orchestrator Configuration (JSON)
                   </label>
-                  <select
-                    id="context"
-                    value={sessionSettings.context}
-                    onChange={(e) => setSessionSettings((s) => ({ ...s, context: e.target.value }))}
-                  >
-                    {KNOWN_CONTEXTS.map((ctx) => (
-                      <option key={ctx.id} value={ctx.id}>
-                        {ctx.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="setting-description">
-                    {KNOWN_CONTEXTS.find((c) => c.id === sessionSettings.context)?.description}
-                  </span>
+                  <textarea
+                    className="config-json-input"
+                    placeholder='{"extended_thinking": false}'
+                    value={sessionSettings.orchestratorConfig ? JSON.stringify(sessionSettings.orchestratorConfig, null, 2) : ''}
+                    onChange={(e) => {
+                      try {
+                        const parsed = e.target.value.trim() ? JSON.parse(e.target.value) : undefined;
+                        setSessionSettings((s) => ({ ...s, orchestratorConfig: parsed }));
+                      } catch {
+                        // Invalid JSON, keep editing
+                      }
+                    }}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Context Config */}
+                <div className="session-config-editor">
+                  <label>
+                    <Settings size={12} />
+                    Context Configuration (JSON)
+                  </label>
+                  <textarea
+                    className="config-json-input"
+                    placeholder='{"max_tokens": 50000}'
+                    value={sessionSettings.contextConfig ? JSON.stringify(sessionSettings.contextConfig, null, 2) : ''}
+                    onChange={(e) => {
+                      try {
+                        const parsed = e.target.value.trim() ? JSON.parse(e.target.value) : undefined;
+                        setSessionSettings((s) => ({ ...s, contextConfig: parsed }));
+                      } catch {
+                        // Invalid JSON, keep editing
+                      }
+                    }}
+                    rows={3}
+                  />
                 </div>
               </div>
             </div>
