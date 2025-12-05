@@ -165,12 +165,10 @@ class StandardModuleSourceResolver:
     def _check_workspace(self, module_id: str) -> FileSource | None:
         """Check workspace convention for module.
 
-        Searches through all workspace directories in order, trying both:
-        1. Exact module_id as directory name
-        2. amplifier-module-<id> convention (common in development workspaces)
+        Searches through all workspace directories in order.
 
         Args:
-            module_id: Module identifier
+            module_id: Module identifier (exact name)
 
         Returns:
             FileSource if found and valid, None otherwise
@@ -180,27 +178,22 @@ class StandardModuleSourceResolver:
 
         # Search through all workspace directories in order
         for workspace_dir in self.workspace_dirs:
-            # Try exact module ID first, then prefixed convention
-            candidates = [
-                workspace_dir / module_id,
-                workspace_dir / f"amplifier-module-{module_id}",
-            ]
+            workspace_path = workspace_dir / module_id
 
-            for workspace_path in candidates:
-                if not workspace_path.exists():
-                    continue
+            if not workspace_path.exists():
+                continue
 
-                # Check for empty submodule (has .git but no code)
-                if self._is_empty_submodule(workspace_path):
-                    logger.debug(f"Module {module_id} workspace dir is empty submodule, skipping")
-                    continue
+            # Check for empty submodule (has .git but no code)
+            if self._is_empty_submodule(workspace_path):
+                logger.debug(f"Module {module_id} workspace dir is empty submodule, skipping")
+                continue
 
-                # Check if valid module
-                if not any(workspace_path.glob("**/*.py")):
-                    logger.warning(f"Module {module_id} in workspace but contains no Python files, skipping")
-                    continue
+            # Check if valid module
+            if not any(workspace_path.glob("**/*.py")):
+                logger.warning(f"Module {module_id} in workspace but contains no Python files, skipping")
+                continue
 
-                return FileSource(workspace_path)
+            return FileSource(workspace_path)
 
         return None
 
@@ -252,10 +245,7 @@ class StandardModuleSourceResolver:
 
         # Both failed - build workspace message
         if self.workspace_dirs:
-            workspace_paths = []
-            for ws_dir in self.workspace_dirs:
-                workspace_paths.append(f"{ws_dir}/{module_id}")
-                workspace_paths.append(f"{ws_dir}/{convention_name}")
+            workspace_paths = [f"{ws_dir}/{module_id}" for ws_dir in self.workspace_dirs]
             workspace_msg = ", ".join(workspace_paths) + " (none found)"
         else:
             workspace_msg = "N/A"
