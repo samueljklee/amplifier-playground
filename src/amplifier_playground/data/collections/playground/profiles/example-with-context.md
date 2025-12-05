@@ -7,21 +7,26 @@ profile:
 session:
   orchestrator:
     module: loop-streaming
+    source: git+https://github.com/microsoft/amplifier-module-loop-streaming@main
     config:
       extended_thinking: false
   context:
     module: context-simple
+    source: git+https://github.com/microsoft/amplifier-module-context-simple@main
     config:
       max_tokens: 50000
 
 providers:
   - module: provider-anthropic
+    source: git+https://github.com/microsoft/amplifier-module-provider-anthropic@main
     config:
       model: claude-sonnet-4-20250514
 
 tools:
   - module: tool-filesystem
+    source: git+https://github.com/microsoft/amplifier-module-tool-filesystem@main
   - module: tool-bash
+    source: git+https://github.com/microsoft/amplifier-module-tool-bash@main
 ---
 
 # Profile with Local Context

@@ -1,20 +1,23 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Info, FileJson, AlertTriangle } from 'lucide-react';
-import type { ProfileListItem, SessionInfo, Message } from '../types';
+import { Info, FileJson, AlertTriangle, Blocks } from 'lucide-react';
+import type { ProfileListItem, SessionInfo, Message, MountPlan } from '../types';
 import { createSession, sendPrompt, stopSession, subscribeToEvents, getProfileCredentials, type ProfileCredentials } from '../api';
 import { SessionInfoModal } from './SessionInfoModal';
 import { MountPlanInputModal } from './MountPlanInputModal';
 
 const CUSTOM_JSON_VALUE = '__custom_json__';
+const BUILDER_VALUE = '__builder__';
 
 interface SessionPaneProps {
   profiles: ProfileListItem[];
   onClose: () => void;
   onViewProfile: (profileName: string) => void;
   onOpenSettings?: () => void;
+  onOpenBuilder?: () => void;
+  builtMountPlan?: MountPlan | null;
 }
 
-export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }: SessionPaneProps) {
+export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings, onOpenBuilder, builtMountPlan }: SessionPaneProps) {
   const [selectedProfile, setSelectedProfile] = useState<string>('');
   const [customMountPlan, setCustomMountPlan] = useState<Record<string, unknown> | null>(null);
   const [showMountPlanInput, setShowMountPlanInput] = useState(false);
@@ -30,7 +33,7 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
 
   // Check credentials when profile changes
   useEffect(() => {
-    if (!selectedProfile || selectedProfile === CUSTOM_JSON_VALUE) {
+    if (!selectedProfile || selectedProfile === CUSTOM_JSON_VALUE || selectedProfile === BUILDER_VALUE) {
       setCredentialStatus(null);
       return;
     }
@@ -44,9 +47,9 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
   }, [selectedProfile]);
 
   // Derived state: whether we have a valid session config
-  const hasValidConfig = selectedProfile && selectedProfile !== CUSTOM_JSON_VALUE
+  const hasValidConfig = selectedProfile && selectedProfile !== CUSTOM_JSON_VALUE && selectedProfile !== BUILDER_VALUE
     ? true
-    : customMountPlan !== null;
+    : (selectedProfile === BUILDER_VALUE ? builtMountPlan !== null : customMountPlan !== null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventsEndRef = useRef<HTMLDivElement>(null);
@@ -115,9 +118,13 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
         setMessages([]);
         setEvents([]);
 
-        // Create session with profile or custom mount plan
-        const isCustom = selectedProfile === CUSTOM_JSON_VALUE && customMountPlan;
-        if (isCustom) {
+        // Create session with profile, custom mount plan, or built mount plan
+        const isCustomJson = selectedProfile === CUSTOM_JSON_VALUE && customMountPlan;
+        const isBuilder = selectedProfile === BUILDER_VALUE && builtMountPlan;
+
+        if (isBuilder) {
+          currentSession = await createSession({ mountPlan: builtMountPlan });
+        } else if (isCustomJson) {
           currentSession = await createSession({ mountPlan: customMountPlan });
         } else {
           currentSession = await createSession({ profile: selectedProfile });
@@ -127,7 +134,9 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
         setMessages([
           {
             role: 'system',
-            content: isCustom
+            content: isBuilder
+              ? 'Session started with built mount plan'
+              : isCustomJson
               ? 'Session started with custom mount plan'
               : `Session started with profile: ${selectedProfile}`,
             timestamp: new Date(),
@@ -152,7 +161,7 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
     } finally {
       setLoading(false);
     }
-  }, [session, input, selectedProfile, customMountPlan, hasValidConfig]);
+  }, [session, input, selectedProfile, customMountPlan, builtMountPlan, hasValidConfig]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -172,6 +181,8 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
             setSelectedProfile(value);
             if (value === CUSTOM_JSON_VALUE) {
               setShowMountPlanInput(true);
+            } else if (value === BUILDER_VALUE && onOpenBuilder) {
+              onOpenBuilder();
             } else {
               setCustomMountPlan(null);
             }
@@ -180,6 +191,7 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
           className="profile-select-inline"
         >
           <option value="">Select configuration...</option>
+          <option value={BUILDER_VALUE}>Build custom mount plan...</option>
           <option value={CUSTOM_JSON_VALUE}>Paste mount plan JSON...</option>
           {profiles.map((p) => (
             <option key={p.path} value={p.name}>
@@ -199,10 +211,21 @@ export function SessionPane({ profiles, onClose, onViewProfile, onOpenSettings }
           </button>
         )}
 
+        {selectedProfile === BUILDER_VALUE && builtMountPlan && onOpenBuilder && (
+          <button
+            onClick={onOpenBuilder}
+            disabled={!!session || loading}
+            className="button small icon-btn"
+            title="Edit mount plan in builder"
+          >
+            <Blocks size={14} />
+          </button>
+        )}
+
         <div className="pane-controls">
           <button
-            onClick={() => selectedProfile && selectedProfile !== CUSTOM_JSON_VALUE && onViewProfile(selectedProfile)}
-            disabled={!selectedProfile || selectedProfile === CUSTOM_JSON_VALUE}
+            onClick={() => selectedProfile && selectedProfile !== CUSTOM_JSON_VALUE && selectedProfile !== BUILDER_VALUE && onViewProfile(selectedProfile)}
+            disabled={!selectedProfile || selectedProfile === CUSTOM_JSON_VALUE || selectedProfile === BUILDER_VALUE}
             className="button small"
             title="View profile"
           >

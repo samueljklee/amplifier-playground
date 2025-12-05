@@ -22,6 +22,7 @@ class ModuleInfo:
     version: str | None = None
     installed: bool = False
     config_schema: dict | None = None  # JSON Schema for config options (future)
+    config: dict | None = None  # User-provided configuration for the module
 
 
 @dataclass
@@ -44,85 +45,167 @@ class ModuleRegistry:
         self._init_known_modules()
 
     def _init_known_modules(self):
-        """Initialize curated list of known modules."""
-        # Core modules that come with amplifier
+        """Initialize curated list of known modules from the Amplifier module catalog."""
+        # All modules from MODULES.md - reference implementations
         known = [
+            # === ORCHESTRATORS ===
             ModuleInfo(
                 id="loop-basic",
                 name="Basic Loop Orchestrator",
                 category="orchestrator",
-                description="Simple request-response orchestration",
-                source="amplifier-core",
+                description="Standard sequential execution - simple request/response flow",
+                source="git+https://github.com/microsoft/amplifier-module-loop-basic@main",
             ),
             ModuleInfo(
                 id="loop-streaming",
                 name="Streaming Loop Orchestrator",
                 category="orchestrator",
-                description="Streaming response orchestration",
-                source="amplifier-core",
+                description="Real-time streaming responses with extended thinking support",
+                source="git+https://github.com/microsoft/amplifier-module-loop-streaming@main",
             ),
             ModuleInfo(
-                id="context-simple",
-                name="Simple Context Manager",
-                category="context",
-                description="In-memory context (no persistence)",
-                source="amplifier-core",
+                id="loop-events",
+                name="Event-Driven Orchestrator",
+                category="orchestrator",
+                description="Event-driven orchestrator with hook integration",
+                source="git+https://github.com/microsoft/amplifier-module-loop-events@main",
             ),
-            ModuleInfo(
-                id="context-persistent",
-                name="Persistent Context Manager",
-                category="context",
-                description="File-based context with checkpointing",
-                source="amplifier-core",
-            ),
+            # === PROVIDERS ===
             ModuleInfo(
                 id="provider-anthropic",
                 name="Anthropic Provider",
                 category="provider",
-                description="Claude models via Anthropic API",
-                source="git+https://github.com/microsoft/amplifier-modules#subdirectory=provider-anthropic",
+                description="Anthropic Claude integration (Sonnet 4.5, Opus, etc.)",
+                source="git+https://github.com/microsoft/amplifier-module-provider-anthropic@main",
             ),
             ModuleInfo(
                 id="provider-openai",
                 name="OpenAI Provider",
                 category="provider",
-                description="GPT models via OpenAI API",
-                source="git+https://github.com/microsoft/amplifier-modules#subdirectory=provider-openai",
+                description="OpenAI GPT integration",
+                source="git+https://github.com/microsoft/amplifier-module-provider-openai@main",
             ),
             ModuleInfo(
                 id="provider-azure-openai",
                 name="Azure OpenAI Provider",
                 category="provider",
-                description="GPT models via Azure OpenAI",
-                source="git+https://github.com/microsoft/amplifier-modules#subdirectory=provider-azure-openai",
+                description="Azure OpenAI with managed identity support",
+                source="git+https://github.com/microsoft/amplifier-module-provider-azure-openai@main",
             ),
             ModuleInfo(
                 id="provider-ollama",
                 name="Ollama Provider",
                 category="provider",
-                description="Local models via Ollama",
-                source="git+https://github.com/microsoft/amplifier-modules#subdirectory=provider-ollama",
+                description="Local Ollama models",
+                source="git+https://github.com/microsoft/amplifier-module-provider-ollama@main",
             ),
+            ModuleInfo(
+                id="provider-mock",
+                name="Mock Provider",
+                category="provider",
+                description="Mock provider for testing",
+                source="git+https://github.com/microsoft/amplifier-module-provider-mock@main",
+            ),
+            # === TOOLS ===
             ModuleInfo(
                 id="tool-filesystem",
                 name="Filesystem Tool",
                 category="tool",
-                description="File read/write operations",
-                source="git+https://github.com/microsoft/amplifier-modules#subdirectory=tool-filesystem",
+                description="File operations (read, write, edit, list)",
+                source="git+https://github.com/microsoft/amplifier-module-tool-filesystem@main",
             ),
             ModuleInfo(
-                id="tool-shell",
-                name="Shell Tool",
+                id="tool-bash",
+                name="Bash Tool",
                 category="tool",
                 description="Shell command execution",
-                source="git+https://github.com/microsoft/amplifier-modules#subdirectory=tool-shell",
+                source="git+https://github.com/microsoft/amplifier-module-tool-bash@main",
             ),
+            ModuleInfo(
+                id="tool-web",
+                name="Web Tool",
+                category="tool",
+                description="Web search and content fetching",
+                source="git+https://github.com/microsoft/amplifier-module-tool-web@main",
+            ),
+            ModuleInfo(
+                id="tool-search",
+                name="Search Tool",
+                category="tool",
+                description="Web search capabilities",
+                source="git+https://github.com/microsoft/amplifier-module-tool-search@main",
+            ),
+            ModuleInfo(
+                id="tool-task",
+                name="Task Tool",
+                category="tool",
+                description="Agent delegation (sub-session spawning)",
+                source="git+https://github.com/microsoft/amplifier-module-tool-task@main",
+            ),
+            # === CONTEXT MANAGERS ===
+            ModuleInfo(
+                id="context-simple",
+                name="Simple Context Manager",
+                category="context",
+                description="In-memory context with automatic compaction",
+                source="git+https://github.com/microsoft/amplifier-module-context-simple@main",
+            ),
+            ModuleInfo(
+                id="context-persistent",
+                name="Persistent Context Manager",
+                category="context",
+                description="File-backed persistent context across sessions",
+                source="git+https://github.com/microsoft/amplifier-module-context-persistent@main",
+            ),
+            # === HOOKS ===
             ModuleInfo(
                 id="hooks-logging",
                 name="Logging Hooks",
                 category="hook",
-                description="Event logging to file/console",
-                source="git+https://github.com/microsoft/amplifier-modules#subdirectory=hooks-logging",
+                description="Unified JSONL event logging to per-session files",
+                source="git+https://github.com/microsoft/amplifier-module-hooks-logging@main",
+            ),
+            ModuleInfo(
+                id="hooks-redaction",
+                name="Redaction Hooks",
+                category="hook",
+                description="Privacy-preserving data redaction",
+                source="git+https://github.com/microsoft/amplifier-module-hooks-redaction@main",
+            ),
+            ModuleInfo(
+                id="hooks-approval",
+                name="Approval Hooks",
+                category="hook",
+                description="Interactive approval for sensitive operations",
+                source="git+https://github.com/microsoft/amplifier-module-hooks-approval@main",
+            ),
+            ModuleInfo(
+                id="hooks-backup",
+                name="Backup Hooks",
+                category="hook",
+                description="Automatic session backup",
+                source="git+https://github.com/microsoft/amplifier-module-hooks-backup@main",
+            ),
+            ModuleInfo(
+                id="hooks-streaming-ui",
+                name="Streaming UI Hooks",
+                category="hook",
+                description="Real-time UI updates during streaming",
+                source="git+https://github.com/microsoft/amplifier-module-hooks-streaming-ui@main",
+            ),
+            ModuleInfo(
+                id="hooks-scheduler-cost-aware",
+                name="Cost-Aware Scheduler",
+                category="hook",
+                description="Cost-aware model routing",
+                source="git+https://github.com/microsoft/amplifier-module-hooks-scheduler-cost-aware@main",
+            ),
+            ModuleInfo(
+                id="hooks-scheduler-heuristic",
+                name="Heuristic Scheduler",
+                category="hook",
+                description="Heuristic-based model selection",
+                source="git+https://github.com/microsoft/amplifier-module-hooks-scheduler-heuristic@main",
             ),
         ]
 
@@ -223,6 +306,53 @@ class ModuleRegistry:
             logger.info(f"Unregistered local module: {module_id}")
             return True
         return False
+
+    def add_custom(
+        self,
+        module_id: str,
+        name: str,
+        category: str,
+        source: str,
+        description: str | None = None,
+        config: dict | None = None,
+    ) -> ModuleInfo:
+        """
+        Add a custom module with git URL or path source.
+
+        This allows users to add custom providers, tools, hooks, etc.
+        that are not in the known catalog.
+
+        Args:
+            module_id: Unique module identifier (e.g., "my-custom-provider")
+            name: Display name for the module
+            category: Module category (provider, tool, orchestrator, context, hook)
+            source: Git URL (e.g., "git+https://github.com/user/repo@main") or local path
+            description: Optional description of the module
+            config: Optional key-value configuration for the module
+
+        Returns:
+            Created ModuleInfo
+
+        Raises:
+            ValueError: If category is invalid
+        """
+        valid_categories = ["provider", "tool", "orchestrator", "context", "hook"]
+        if category not in valid_categories:
+            raise ValueError(f"Invalid category '{category}'. Must be one of: {', '.join(valid_categories)}")
+
+        module_info = ModuleInfo(
+            id=module_id,
+            name=name,
+            category=category,  # type: ignore
+            description=description or f"Custom {category} module",
+            source=source,
+            installed=False,
+            config=config,
+        )
+
+        self._local[module_id] = module_info
+        logger.info(f"Added custom module: {module_id} ({category}) from {source}")
+        return module_info
 
     def list_by_category(self, category: str) -> list[ModuleInfo]:
         """

@@ -215,13 +215,21 @@ export function MountPlanViewer({ plan }: MountPlanViewerProps) {
             {plan.session.orchestrator && (
               <div className="session-item">
                 <span className="session-label">Orchestrator</span>
-                <span className="session-value">{plan.session.orchestrator}</span>
+                <span className="session-value">
+                  {typeof plan.session.orchestrator === 'string'
+                    ? plan.session.orchestrator
+                    : plan.session.orchestrator.module}
+                </span>
               </div>
             )}
             {plan.session.context && (
               <div className="session-item">
                 <span className="session-label">Context</span>
-                <span className="session-value">{plan.session.context}</span>
+                <span className="session-value">
+                  {typeof plan.session.context === 'string'
+                    ? plan.session.context
+                    : plan.session.context.module}
+                </span>
               </div>
             )}
           </div>

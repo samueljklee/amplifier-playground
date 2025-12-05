@@ -300,8 +300,8 @@ class SessionRunner:
                 # Prepend loaded @mention content to markdown body
                 context_parts = []
                 for msg in context_messages:
-                    if isinstance(msg.get("content"), str):
-                        context_parts.append(msg["content"])
+                    if isinstance(msg.content, str):
+                        context_parts.append(msg.content)
 
                 if context_parts:
                     context_content = "\n\n".join(context_parts)

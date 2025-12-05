@@ -8,17 +8,20 @@ profile:
 session:
   orchestrator:
     module: loop-streaming
+    source: git+https://github.com/microsoft/amplifier-module-loop-streaming@main
     config:
       extended_thinking: true
       default_provider: provider-openai
 
 providers:
   - module: provider-anthropic
+    source: git+https://github.com/microsoft/amplifier-module-provider-anthropic@main
     config:
       debug: true
       raw_debug: true
       priority: 100
   - module: provider-openai
+    source: git+https://github.com/microsoft/amplifier-module-provider-openai@main
     config:
       debug: true
       raw_debug: true
@@ -36,6 +39,7 @@ tools:
 
 hooks:
   - module: hooks-status-context
+    source: git+https://github.com/microsoft/amplifier-module-hooks-status-context@main
     config:
       include_git: true
       git_include_status: true

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Settings, MessageSquare } from 'lucide-react';
-import type { ProfileListItem, CredentialsStatus } from './types';
+import type { ProfileListItem, CredentialsStatus, MountPlan } from './types';
 import { listProfiles, getCredentialsStatus } from './api';
 import { SessionPane } from './components/SessionPane';
 import { DependencyGraphViewer } from './components/DependencyGraphViewer';
 import { HelpModal } from './components/HelpModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ThemeToggle } from './components/ThemeToggle';
+import { MountPlanBuilder } from './components/MountPlanBuilder';
 import './App.css';
 
 interface Pane {
@@ -21,6 +22,9 @@ function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [credentials, setCredentials] = useState<CredentialsStatus | null>(null);
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [pendingBuilderPaneId, setPendingBuilderPaneId] = useState<string | null>(null);
+  const [builtMountPlans, setBuiltMountPlans] = useState<Record<string, MountPlan>>({});
 
   // Load profiles and credentials status on mount
   useEffect(() => {
@@ -48,6 +52,24 @@ function App() {
       return prev.filter((p) => p.id !== id);
     });
   }, []);
+
+  // Open builder for a specific pane
+  const openBuilder = useCallback((paneId: string) => {
+    setPendingBuilderPaneId(paneId);
+    setShowBuilder(true);
+  }, []);
+
+  // Handle built mount plan from builder
+  const handleBuilderLaunch = useCallback((mountPlan: MountPlan) => {
+    if (pendingBuilderPaneId) {
+      setBuiltMountPlans((prev) => ({
+        ...prev,
+        [pendingBuilderPaneId]: mountPlan,
+      }));
+    }
+    setShowBuilder(false);
+    setPendingBuilderPaneId(null);
+  }, [pendingBuilderPaneId]);
 
   return (
     <div className="app">
@@ -113,6 +135,8 @@ function App() {
             onClose={() => removePane(pane.id)}
             onViewProfile={setViewingProfile}
             onOpenSettings={() => setShowSettings(true)}
+            onOpenBuilder={() => openBuilder(pane.id)}
+            builtMountPlan={builtMountPlans[pane.id] || null}
           />
         ))}
       </main>
@@ -135,6 +159,18 @@ function App() {
         <SettingsModal
           onClose={() => setShowSettings(false)}
           onSaved={loadCredentials}
+        />
+      )}
+
+      {/* Mount Plan Builder Modal */}
+      {showBuilder && (
+        <MountPlanBuilder
+          onClose={() => {
+            setShowBuilder(false);
+            setPendingBuilderPaneId(null);
+          }}
+          onLaunch={handleBuilderLaunch}
+          initialMountPlan={pendingBuilderPaneId ? builtMountPlans[pendingBuilderPaneId] : null}
         />
       )}
     </div>

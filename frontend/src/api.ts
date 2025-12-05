@@ -1,6 +1,6 @@
 // API client for Amplifier Playground
 
-import type { ProfileListItem, ProfileContent, ProfileDependencyGraph, SessionInfo, SessionDetailInfo, PromptResponse, CredentialsStatus } from './types';
+import type { ProfileListItem, ProfileContent, ProfileDependencyGraph, SessionInfo, SessionDetailInfo, PromptResponse, CredentialsStatus, ModuleInfo } from './types';
 
 const API_BASE = '/api';
 
@@ -200,4 +200,65 @@ export async function deleteCustomCredential(envVar: string): Promise<void> {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.detail || `Failed to delete custom credential: ${response.statusText}`);
   }
+}
+
+// Modules API
+export async function listModules(category?: string): Promise<ModuleInfo[]> {
+  const url = category
+    ? `${API_BASE}/modules?category=${encodeURIComponent(category)}`
+    : `${API_BASE}/modules`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to list modules: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+// Collections API
+export interface CollectionInfo {
+  name: string;
+  path: string;
+  resources: {
+    agents: string[];
+    context: string[];
+  };
+}
+
+export async function listCollections(): Promise<string[]> {
+  const response = await fetch(`${API_BASE}/collections`);
+  if (!response.ok) {
+    throw new Error(`Failed to list collections: ${response.statusText}`);
+  }
+  // Backend returns CollectionInfo[] with {name, path}, extract just the names
+  const collections: Array<{ name: string; path: string }> = await response.json();
+  return collections.map((c) => c.name);
+}
+
+export async function getCollectionInfo(collectionName: string): Promise<CollectionInfo> {
+  const response = await fetch(`${API_BASE}/collections/${encodeURIComponent(collectionName)}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to get collection: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function getCollectionAgentContent(collectionName: string, agentName: string): Promise<string> {
+  const response = await fetch(`${API_BASE}/collections/${encodeURIComponent(collectionName)}/agents/${encodeURIComponent(agentName)}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to get agent content: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return data.content || '';
+}
+
+export async function getCollectionContextContent(collectionName: string, contextName: string): Promise<string> {
+  const response = await fetch(`${API_BASE}/collections/${encodeURIComponent(collectionName)}/context/${encodeURIComponent(contextName)}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to get context content: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return data.content || '';
 }

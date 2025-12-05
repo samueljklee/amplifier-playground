@@ -8,8 +8,10 @@ profile:
 session:
   orchestrator:
     module: loop-basic
+    source: git+https://github.com/microsoft/amplifier-module-loop-basic@main
   context:
     module: context-simple
+    source: git+https://github.com/microsoft/amplifier-module-context-simple@main
     config:
       max_tokens: 50000
       compact_threshold: 0.7
@@ -35,6 +37,7 @@ agents:
       description: Simple test agent for validation
       tools:
         - module: tool-filesystem
+          source: git+https://github.com/microsoft/amplifier-module-tool-filesystem@main
       system:
         instruction: "You are a test agent. Respond with 'Test successful' to any query."
 ---

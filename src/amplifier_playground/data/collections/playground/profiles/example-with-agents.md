@@ -7,25 +7,31 @@ profile:
 session:
   orchestrator:
     module: loop-streaming
+    source: git+https://github.com/microsoft/amplifier-module-loop-streaming@main
     config:
       extended_thinking: false
   context:
     module: context-simple
+    source: git+https://github.com/microsoft/amplifier-module-context-simple@main
     config:
       max_tokens: 100000
 
 providers:
   - module: provider-anthropic
+    source: git+https://github.com/microsoft/amplifier-module-provider-anthropic@main
     config:
       model: claude-sonnet-4-20250514
 
 tools:
   - module: tool-filesystem
+    source: git+https://github.com/microsoft/amplifier-module-tool-filesystem@main
   - module: tool-bash
+    source: git+https://github.com/microsoft/amplifier-module-tool-bash@main
 
 agents:
-  - code-reviewer
-  - test-writer
+  - bug-hunter
+  - test-coverage
+  - researcher
 ---
 
 # Profile with Agents
@@ -34,11 +40,14 @@ This profile includes agent definitions for specialized tasks. Agents are reusab
 
 ## Included Agents
 
-### code-reviewer
-Reviews code for quality, bugs, and best practices.
+### bug-hunter
+Specialized debugging expert focused on finding and fixing bugs systematically using hypothesis-driven debugging.
 
-### test-writer
-Generates comprehensive test cases for your code.
+### test-coverage
+Expert at analyzing test coverage, identifying gaps, and suggesting comprehensive test cases.
+
+### researcher
+General-purpose research agent for exploring codebases, searching for code patterns, and answering questions.
 
 ## How Agents Work
 

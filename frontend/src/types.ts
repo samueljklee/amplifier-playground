@@ -98,10 +98,16 @@ export interface ProfileDependencyGraph {
 }
 
 // Mount Plan types
+export interface SessionModuleEntry {
+  module: string;
+  source?: string;
+  config?: Record<string, unknown>;
+}
+
 export interface MountPlan {
   session?: {
-    orchestrator?: string;
-    context?: string;
+    orchestrator?: string | SessionModuleEntry;
+    context?: string | SessionModuleEntry;
     [key: string]: unknown;
   };
   providers?: ModuleEntry[];
@@ -113,6 +119,7 @@ export interface MountPlan {
 
 export interface ModuleEntry {
   module: string;
+  source?: string;
   config?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -122,4 +129,15 @@ export interface AgentConfig {
   session?: Record<string, unknown>;
   tools?: string[];
   [key: string]: unknown;
+}
+
+// Module types for the builder
+export interface ModuleInfo {
+  id: string;
+  name: string;
+  category: 'provider' | 'tool' | 'hook' | 'context' | 'orchestrator';
+  description: string | null;
+  version: string | null;
+  source: string | null;
+  config_schema: Record<string, unknown> | null;
 }

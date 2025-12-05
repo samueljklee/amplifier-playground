@@ -42,6 +42,7 @@ class ModuleInfo(BaseModel):
     version: str | None = None
     source: str = "known"
     config_schema: dict[str, Any] | None = None
+    config: dict[str, Any] | None = None  # User-provided configuration for custom modules
 
 
 class RegisterModuleRequest(BaseModel):
@@ -52,6 +53,17 @@ class RegisterModuleRequest(BaseModel):
     category: str
     path: str
     description: str | None = None
+
+
+class AddCustomModuleRequest(BaseModel):
+    """Request to add a custom module with git URL and configuration."""
+
+    module_id: str = Field(..., description="Unique identifier for the module (e.g., 'my-custom-provider')")
+    name: str = Field(..., description="Display name for the module")
+    category: str = Field(..., description="Module category: provider, tool, orchestrator, context, or hook")
+    source: str = Field(..., description="Git URL (e.g., 'git+https://github.com/user/repo@main') or local path")
+    description: str | None = Field(None, description="Optional description of the module")
+    config: dict[str, Any] = Field(default_factory=dict, description="Arbitrary key-value configuration for the module")
 
 
 # =============================================================================
