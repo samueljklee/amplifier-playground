@@ -131,12 +131,19 @@ def build_agent_loader(coll_manager: CollectionManager) -> AgentLoader:
         search_paths.append(user_agents)
 
     # Collection agents directories
+    # Note: Internal collections have agents at coll_path/agents (directory-based)
+    # External collections have agents at coll_path.parent/agents (package-based)
     for coll in coll_manager.list_collections():
         coll_path = coll_manager.resolve_collection(coll.name)
         if coll_path:
-            agents_path = coll_path.parent / "agents"
-            if agents_path.exists():
-                search_paths.append(agents_path)
+            # Check both paths - internal collections use coll_path/agents
+            direct_agents = coll_path / "agents"
+            if direct_agents.exists():
+                search_paths.append(direct_agents)
+            # External collections use coll_path.parent/agents (package layout)
+            parent_agents = coll_path.parent / "agents"
+            if parent_agents.exists() and parent_agents != direct_agents:
+                search_paths.append(parent_agents)
 
     agent_resolver = AgentResolver(
         search_paths=search_paths,

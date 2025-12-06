@@ -522,7 +522,7 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
   };
 
   // Handle profile agent drop on agents section
-  const handleAgentDrop = (e: DragEvent) => {
+  const handleAgentDrop = async (e: DragEvent) => {
     e.preventDefault();
     setDragOverAgents(false);
     try {
@@ -536,12 +536,58 @@ export function MountPlanBuilder({ onClose, onLaunch, initialMountPlan }: MountP
       const exists = builderState.agents.some((a) => a.name === moduleData.name);
       if (exists) return;
 
+      // Load content from backend
+      let content = moduleData.content || '';
+      if (!content) {
+        try {
+          // Extract collection name from path (format: /path/to/collections/collection-name/agents/agent-name.md)
+          const pathParts = moduleData.path.split('/');
+          const collectionsIndex = pathParts.findIndex((p: string) => p === 'collections');
+          if (collectionsIndex !== -1 && collectionsIndex + 1 < pathParts.length) {
+            const collectionName = pathParts[collectionsIndex + 1];
+            const agentName = moduleData.name;
+            
+            const { getCollectionAgentContent } = await import('../api');
+            content = await getCollectionAgentContent(collectionName, agentName);
+          }
+        } catch (err) {
+          console.error('Failed to load agent content:', err);
+          // Continue with empty content - user can still use it
+        }
+      }
+
+      // Parse agent content to extract description and instruction
+      let description: string | undefined;
+      let instruction: string | undefined;
+
+      if (content) {
+        // Simple parser: split by '---' markers to extract frontmatter and body
+        const parts = content.split(/^---\s*$/m);
+        if (parts.length >= 3) {
+          // Format: [empty, frontmatter, body, ...]
+          const frontmatter = parts[1];
+          const body = parts.slice(2).join('---').trim();
+          
+          // Extract description from frontmatter (simple regex match)
+          const descMatch = frontmatter.match(/description:\s*["'](.+?)["']/s);
+          if (descMatch) {
+            description = descMatch[1];
+          }
+          
+          // Body is the instruction
+          instruction = body || undefined;
+        } else {
+          // No frontmatter, entire content is instruction
+          instruction = content;
+        }
+      }
+
       // Create a new agent from the profile agent
       const newAgent: BuilderAgent = {
         id: crypto.randomUUID(),
         name: moduleData.name,
-        description: moduleData.description || `Agent from ${moduleData.path}`,
-        instruction: moduleData.path,
+        description: description || `Agent from ${moduleData.path}`,
+        instruction: instruction || '',
         tools: [],
       };
       setBuilderState((prev) => ({

@@ -8,6 +8,7 @@ dependencies = [
     "amplifier-core",
     "amplifier-config",
     "amplifier-module-resolution",
+    "amplifier-app-cli",  # Required for tool-task's session_spawner (until decoupled upstream)
     "amplifier-profiles",
     "click>=8.0",
     "rich>=13.0",
@@ -22,7 +23,8 @@ dependencies = [
 [tool.uv.sources]
 amplifier-core = { git = "https://github.com/microsoft/amplifier-core", branch = "main" }
 amplifier-config = { git = "https://github.com/microsoft/amplifier-config", branch = "main" }
-amplifier-module-resolution = { path = "modules/amplifier-module-resolution", editable = true }
+amplifier-module-resolution = { git = "https://github.com/microsoft/amplifier-module-resolution", branch = "main" }
+amplifier-app-cli = { git = "https://github.com/microsoft/amplifier-app-cli", branch = "main" }
 amplifier-profiles = { git = "https://github.com/microsoft/amplifier-profiles", branch = "main" }
 amplifier-module-provider-openai = { git = "https://github.com/microsoft/amplifier-module-provider-openai", branch = "main" }
 amplifier-module-provider-anthropic = { git = "https://github.com/microsoft/amplifier-module-provider-anthropic", branch = "main" }
